@@ -1,3 +1,5 @@
+import os
+import bpy
 import time
 
 BLENDER_FUNC_STACK_DEPTH = 0
@@ -20,3 +22,12 @@ def blender_func(func):
         print('{}Finish: {}, {}'.format('  ' * BLENDER_FUNC_STACK_DEPTH, func.__name__, time_string))
 
     return wrapper
+
+
+def save_blend(filepath='/tmp/temp.blend'):
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    bpy.ops.wm.save_as_mainfile(filepath=filepath)
+
+
+__all__ = ['save_blend']

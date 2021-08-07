@@ -10,7 +10,7 @@ The differences between this project and BlenderProc are:
 - Simple but powerful functions, e.g., `clean_data()`, `set_camera()`, `set_object` to help you write scripts
 
 
-Best practice pseudo code:
+Best practice pseudocode:
 ```
 for frame in frames:
     clean_scene()

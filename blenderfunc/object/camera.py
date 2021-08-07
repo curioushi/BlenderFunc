@@ -3,13 +3,15 @@ from typing import List
 import bpy
 import numpy as np
 from mathutils import Matrix
+from blenderfunc.utility.initialize import remove_all_cameras
 
 
 def set_camera(opencv_matrix: List[List[float]] = None,
                image_resolution: List[int] = None,
                pose: List[List[float]] = None,
                clip_start: float = 0.1,
-               clip_end: float = 100):
+               clip_end: float = 100,
+               name: str = 'Camera') -> bpy.types.Object:
     if opencv_matrix is None:
         opencv_matrix = [[400, 0, 400], [0, 400, 300], [0, 0, 1]]
     if image_resolution is None:
@@ -17,13 +19,15 @@ def set_camera(opencv_matrix: List[List[float]] = None,
     if pose is None:
         pose = [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]
 
-    # remove all cameras
-    for camera in bpy.data.cameras:
-        bpy.data.cameras.remove(camera)
+    # only one camera in the scene
+    remove_all_cameras()
 
     bpy.ops.object.camera_add()
-    cam_ob = bpy.data.objects['Camera']
+    cam_ob = bpy.context.active_object
     cam = cam_ob.data
+    bpy.context.scene.camera = cam_ob
+    cam_ob.name = name
+    cam.name = name
     cam.sensor_fit = 'HORIZONTAL'
 
     fx, fy = opencv_matrix[0][0], opencv_matrix[1][1]
@@ -65,6 +69,8 @@ def set_camera(opencv_matrix: List[List[float]] = None,
     Q = np.array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
     blender_pose = np.array(pose).dot(Q)
     cam_ob.matrix_world = Matrix(blender_pose)
+
+    return cam_ob
 
 
 __all__ = ['set_camera']
