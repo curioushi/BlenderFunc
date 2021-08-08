@@ -12,6 +12,7 @@ def render_color(filepath='/tmp/a.png'):
         node_tree.nodes.remove(node)
 
     output_dir = os.path.dirname(filepath)
+    # TODO: support more output image format
 
     render_layers_node = node_tree.nodes.new('CompositorNodeRLayers')
     file_output_node = node_tree.nodes.new('CompositorNodeOutputFile')
@@ -21,6 +22,7 @@ def render_color(filepath='/tmp/a.png'):
     bpy.ops.render.render(use_viewport=True)
 
     os.rename(os.path.join(output_dir, '0001.png'), filepath)
+    print('image saved: {}'.format(filepath))
 
 
 __all__ = ['render_color']

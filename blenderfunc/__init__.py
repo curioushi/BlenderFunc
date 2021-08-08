@@ -5,4 +5,5 @@ from blenderfunc.utility.initialize import *
 from blenderfunc.object.camera import *
 from blenderfunc.object.meshes import *
 from blenderfunc.object.collector import *
+from blenderfunc.object.physics import *
 from blenderfunc.render.render import *
