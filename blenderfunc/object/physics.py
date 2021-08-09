@@ -4,16 +4,19 @@ import bpy
 import numpy as np
 from mathutils import Vector, Euler
 
-from blenderfunc.object.meshes import remove_mesh
+from blenderfunc.object.meshes import remove_mesh_object
 from blenderfunc.object.collector import get_all_mesh_objects, get_mesh_objects_by_custom_properties
 from blenderfunc.utility.utility import seconds_to_frames
 
 
 def enable_rigid_body(obj: bpy.types.Object, physics_type: str = 'PASSIVE',
-                      physics_collision_shape: str = 'CONVEX_HULL'):
+                      physics_collision_shape: str = 'CONVEX_HULL',
+                      physics_collision_margin: float = None):
     bpy.ops.rigidbody.object_add({'object': obj})
     obj.rigid_body.type = physics_type
     obj.rigid_body.collision_shape = physics_collision_shape
+    obj.rigid_body.use_margin = True
+    obj.rigid_body.collision_margin = physics_collision_margin
 
 
 def disable_rigid_body(obj: bpy.types.Object):
@@ -71,8 +74,8 @@ def simulation(min_simulation_time: float = 5.0, max_simulation_time: float = 10
         new_origin = set_origin(obj, mode="CENTER_OF_VOLUME")
         origin_shift[obj.name] = new_origin - prev_origin
 
-        # Persist mesh scaling as having a scale != 1 can make the simulation unstable
-        persist_transformation_into_mesh(obj, location=False, rotation=False, scale=True)
+        # # Persist mesh scaling as having a scale != 1 can make the simulation unstable
+        # persist_transformation_into_mesh(obj, location=False, rotation=False, scale=True)
 
     # Configure simulator
     bpy.context.scene.rigidbody_world.substeps_per_frame = substeps_per_frame
@@ -150,7 +153,8 @@ def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: fl
     for obj in get_all_mesh_objects():
         physics_type = 'ACTIVE' if obj.get('physics', False) else 'PASSIVE'
         physics_collision_shape = obj.get('collision_shape', 'CONVEX_HULL')
-        enable_rigid_body(obj, physics_type, physics_collision_shape)
+        physics_collision_margin = obj.get('collision_margin', 0.0001)
+        enable_rigid_body(obj, physics_type, physics_collision_shape, physics_collision_margin)
 
     obj_poses_before_sim = get_active_objects_pose()
     origin_shifts = simulation(min_simulation_time, max_simulation_time)
@@ -190,7 +194,7 @@ def remove_highest_object(mesh_objects: List[bpy.types.Object] = None):
         if obj.location[-1] > height:
             height = obj.location[-1]
             index = i
-    remove_mesh(mesh_objects[index])
+    remove_mesh_object(mesh_objects[index])
 
 
 __all__ = ['physics_simulation', 'remove_highest_object']

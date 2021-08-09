@@ -29,18 +29,21 @@ def get_structured_light_params(cam_height=1.5):
 
 cam_K, image_resolution, proj_K, cam2world, proj2world = get_structured_light_params(2.5)
 proj_patterns = sorted(glob('resources/images/sl_patterns/*.bmp'))
+num = 50
 
 bf.initialize()
 bf.set_background_light(strength=0)
 bf.set_camera(opencv_matrix=cam_K, image_resolution=image_resolution, pose=cam2world)
 bf.add_plane(size=10, properties=dict(physics=False, collision_shape='CONVEX_HULL'))
-bf.add_tote(properties=dict(physics=False, collision_shape='MESH'))
-for _ in range(50):
-    obj = bf.add_cylinder(radius=0.05, depth=0.25, properties=dict(physics=True, collision_shape='CONVEX_HULL'))
-    obj.location = (np.random.rand() - 0.5, np.random.rand() - 0.5, np.random.rand() * 5)
-    obj.rotation_euler = (np.random.randint(0, 360), np.random.randint(0, 360), np.random.randint(0, 360))
+tote = bf.add_tote(properties=dict(physics=False, collision_shape='MESH'))
+obj = bf.add_cylinder(radius=0.05, depth=0.25, properties=dict(physics=True, collision_shape='CONVEX_HULL'))
+pose_sampler = bf.in_tote_sampler(tote, obj, num)
+bf.collision_avoidance_positioning(obj, pose_sampler)
+for _ in range(num - 1):
+    obj = bf.duplicate_mesh_object(obj)
+    bf.collision_avoidance_positioning(obj, pose_sampler)
 
-for i in range(50):
+for i in range(num):
     bf.remove_highest_object()
     bf.physics_simulation(max_simulation_time=10)
     for j, pattern_path in enumerate(proj_patterns):

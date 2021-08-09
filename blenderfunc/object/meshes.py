@@ -2,9 +2,9 @@ from typing import List
 import bpy
 
 
-def remove_mesh(obj: bpy.types.Object):
+def remove_mesh_object(obj: bpy.types.Object):
     if obj.type == 'MESH':
-        bpy.data.meshes.remove(obj.data)
+        bpy.data.objects.remove(obj)
     else:
         raise Exception('This object is not a mesh: {}'.format(obj.name))
 
@@ -120,4 +120,11 @@ def add_ply(filepath: str = None, name: str = 'PlyModel', properties: dict = Non
     return obj
 
 
-__all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_tote', 'add_ply', 'remove_mesh']
+def duplicate_mesh_object(obj: bpy.types.Object) -> bpy.types.Object:
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.duplicate(linked=True)
+    return bpy.context.active_object
+
+
+__all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_tote', 'add_ply', 'remove_mesh_object',
+           'duplicate_mesh_object']

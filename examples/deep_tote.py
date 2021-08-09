@@ -8,7 +8,6 @@ setup_custom_packages(["numpy", "Pillow", "xmltodict"])
 import numpy as np
 import blenderfunc.all as bf
 from examples.utility import parse_camera_xml
-from glob import glob
 
 
 def get_structured_light_params(cam_height=1.5):
@@ -28,19 +27,22 @@ def get_structured_light_params(cam_height=1.5):
 
 
 cam_K, image_resolution, _, cam2world, _ = get_structured_light_params(2.5)
+num = 50
 
 bf.initialize()
 bf.set_background_light(strength=1)
 bf.set_camera(opencv_matrix=cam_K, image_resolution=image_resolution, pose=cam2world)
-bf.add_plane(size=10, properties=dict(physics=False, collision_shape='CONVEX_HULL'))
-bf.add_tote(properties=dict(physics=False, collision_shape='MESH'))
-for _ in range(50):
-    obj = bf.add_cylinder(radius=0.05, depth=0.25, properties=dict(physics=True, collision_shape='CONVEX_HULL'))
-    obj.location = (np.random.rand() - 0.5, np.random.rand() - 0.5, np.random.rand() * 5)
-    obj.rotation_euler = (np.random.randint(0, 360), np.random.randint(0, 360), np.random.randint(0, 360))
+bf.add_plane(size=100, properties=dict(physics=False, collision_shape='CONVEX_HULL'))
+tote = bf.add_tote(properties=dict(physics=False, collision_shape='MESH'))
+obj = bf.add_cylinder(radius=0.05, depth=0.25, properties=dict(physics=True, collision_shape='CONVEX_HULL'))
+pose_sampler = bf.in_tote_sampler(tote, obj, num)
+bf.collision_avoidance_positioning(obj, pose_sampler)
+for _ in range(num - 1):
+    obj = bf.duplicate_mesh_object(obj)
+    bf.collision_avoidance_positioning(obj, pose_sampler)
 
-for i in range(50):
+for i in range(num):
     bf.remove_highest_object()
-    bf.physics_simulation(max_simulation_time=10)
-    bf.render_color('output/deep_tote/{}.png'.format(i), denoiser='OPTIX', samples=64)
+    bf.physics_simulation()
+    bf.render_color('output/deep_tote/{}.png'.format(i), denoiser='NLM', samples=64)
     bf.save_blend('output/deep_tote/{}.blend'.format(i))
