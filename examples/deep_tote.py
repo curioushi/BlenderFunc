@@ -44,5 +44,5 @@ for _ in range(num - 1):
 for i in range(num):
     bf.remove_highest_object()
     bf.physics_simulation()
-    bf.render_color('output/deep_tote/{}.png'.format(i), denoiser='NLM', samples=64)
-    bf.save_blend('output/deep_tote/{}.blend'.format(i))
+    bf.render_color('output/deep_tote/{:04}.png'.format(i), denoiser='NLM', samples=64)
+    bf.save_blend('output/deep_tote/{:04}.blend'.format(i))

@@ -48,5 +48,5 @@ for i in range(num):
     bf.physics_simulation(max_simulation_time=10)
     for j, pattern_path in enumerate(proj_patterns):
         bf.set_projector(opencv_matrix=proj_K, image_path=pattern_path, pose=proj2world, flip_x=True)
-        bf.render_color('output/deep_tote_sl/{}.png'.format(j + i * len(proj_patterns)), denoiser='OPTIX', samples=10)
-        bf.save_blend('output/deep_tote_sl/{}.blend'.format(j + i * len(proj_patterns)))
+        bf.render_color('output/deep_tote_sl/{:04}.png'.format(j + i * len(proj_patterns)), denoiser='OPTIX', samples=10)
+        bf.save_blend('output/deep_tote_sl/{:04}.blend'.format(j + i * len(proj_patterns)))
