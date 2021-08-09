@@ -19,10 +19,10 @@ def render_color(filepath: str = '/tmp/temp.png', samples: int = 32, auto_tile_s
         scene.ats_settings.is_enable = True
     else:
         scene.ats_settings.is_enable = False
-    if denoiser in ['NLM', 'OPTIX', 'OPENIMAGEDENOISE']:
+    if denoiser.upper() in ['NLM', 'OPTIX', 'OPENIMAGEDENOISE']:
         bpy.context.view_layer.cycles.use_denoising = True
         scene.cycles.use_denoising = True
-        scene.cycles.denoiser = denoiser
+        scene.cycles.denoiser = denoiser.upper()
     else:
         bpy.context.view_layer.cycles.use_denoising = False
         scene.cycles.use_denoising = False

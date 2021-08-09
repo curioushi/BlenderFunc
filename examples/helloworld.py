@@ -14,5 +14,5 @@ bf.set_camera(pose=[[-0.6440926790237427, 0.6483752727508545, -0.405899167060852
                     [0.7560893297195435, 0.45909714698791504, -0.4664319157600403, 1.8544113636016846],
                     [-0.1160757914185524, -0.6073213815689087, -0.7859307527542114, 2.6100692749023438],
                     [0.0, 0.0, 0.0, 1.0]])
-bf.render_color('output/helloworld/output.png')
+bf.render_color('output/helloworld/output.png', denoiser='NLM')
 bf.save_blend('output/helloworld/output.blend')

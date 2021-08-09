@@ -27,16 +27,20 @@ def get_structured_light_params(cam_height=1.5):
     return cam_K, image_resolution, proj_K, cam2world.tolist(), proj2world.tolist()
 
 
-cam_K, image_resolution, proj_K, cam2world, proj2world = get_structured_light_params(2)
-proj_patterns = sorted(glob('resources/images/sl_patterns/*.bmp'))
+cam_K, image_resolution, _, cam2world, _ = get_structured_light_params(2.5)
 
 bf.initialize()
-bf.set_background_light(strength=0)
-bf.add_plane(10)
-cube = bf.add_cube(0.2)
-cube.location = (0, 0, 0.1)
+bf.set_background_light(strength=1)
 bf.set_camera(opencv_matrix=cam_K, image_resolution=image_resolution, pose=cam2world)
-for i, pattern_path in enumerate(proj_patterns):
-    bf.set_projector(opencv_matrix=proj_K, pose=proj2world, image_path=pattern_path, flip_x=True)
-    bf.render_color('output/structured_light/{}.png'.format(i), denoiser='OPTIX')
-    bf.save_blend('output/structured_light/{}.blend'.format(i))
+bf.add_plane(size=10, properties=dict(physics=False, collision_shape='CONVEX_HULL'))
+bf.add_tote(properties=dict(physics=False, collision_shape='MESH'))
+for _ in range(50):
+    obj = bf.add_cylinder(radius=0.05, depth=0.25, properties=dict(physics=True, collision_shape='CONVEX_HULL'))
+    obj.location = (np.random.rand() - 0.5, np.random.rand() - 0.5, np.random.rand() * 5)
+    obj.rotation_euler = (np.random.randint(0, 360), np.random.randint(0, 360), np.random.randint(0, 360))
+
+for i in range(50):
+    bf.remove_highest_object()
+    bf.physics_simulation(max_simulation_time=10)
+    bf.render_color('output/deep_tote/{}.png'.format(i), denoiser='OPTIX', samples=64)
+    bf.save_blend('output/deep_tote/{}.blend'.format(i))
