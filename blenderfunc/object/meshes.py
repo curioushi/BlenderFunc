@@ -109,4 +109,15 @@ def add_tote(length: float = 1.0, width: float = 1.0, height: float = 0.5, thick
     return obj
 
 
-__all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_tote', 'remove_mesh']
+def add_ply(filepath: str = None, name: str = 'PlyModel', properties: dict = None) -> bpy.types.Object:
+    bpy.ops.import_mesh.ply(filepath=filepath)
+    obj = bpy.context.active_object
+    obj.name = name
+    obj.data.name = name
+    if properties is not None:
+        for key, value in properties.items():
+            obj[key] = value
+    return obj
+
+
+__all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_tote', 'add_ply', 'remove_mesh']

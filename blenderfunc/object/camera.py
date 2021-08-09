@@ -17,7 +17,7 @@ def set_camera(opencv_matrix: List[List[float]] = None,
     if image_resolution is None:
         image_resolution = [800, 600]
     if pose is None:
-        pose = [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]
+        pose = [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 1], [0, 0, 0, 1]]
 
     # only one camera in the scene
     remove_all_cameras()

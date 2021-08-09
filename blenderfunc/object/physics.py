@@ -180,7 +180,7 @@ def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: fl
         disable_rigid_body(obj)
 
 
-def remove_highest(mesh_objects: List[bpy.types.Object] = None):
+def remove_highest_object(mesh_objects: List[bpy.types.Object] = None):
     if mesh_objects is None:
         mesh_objects = get_mesh_objects_by_custom_properties({"physics":True})
 
@@ -193,4 +193,4 @@ def remove_highest(mesh_objects: List[bpy.types.Object] = None):
     remove_mesh(mesh_objects[index])
 
 
-__all__ = ['physics_simulation', 'remove_highest']
+__all__ = ['physics_simulation', 'remove_highest_object']

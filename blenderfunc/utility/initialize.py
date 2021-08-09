@@ -19,9 +19,15 @@ def remove_all_meshes():
 
 
 def remove_all_cameras():
-    """remove all mesh objects"""
+    """remove all camera objects"""
     for cam in bpy.data.cameras:
         bpy.data.cameras.remove(cam)
+
+
+def remove_all_lights():
+    """remove all camera objects"""
+    for light in bpy.data.lights:
+        bpy.data.lights.remove(light)
 
 
 def set_background_light(color: List[float] = None, strength: float = 1.0) -> bpy.types.World:
