@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 
 sys.path.append('.')
 
@@ -14,8 +15,12 @@ cam = bf.set_camera(
           [0, 0, 0, 1]],
 )
 bf.add_plane(size=10, name='Ground', properties=dict(physics=False, collision_shape='CONVEX_HULL', class_id=0))
-cube = bf.add_cube(size=1, name='Cube', properties=dict(physics=True, collision_shape='CONVEX_HULL', class_id=1))
-cube.location = (0, 0, 2)
-bf.physics_simulation()
-bf.render_color('/tmp/{}.png'.format(strength))
-bf.save_blend('/tmp/{}.blend'.format(strength))
+bf.add_tote(properties=dict(physics=False, collision_shape='MESH', class_id=1))
+for i in range(50):
+    cylinder = bf.add_cylinder(radius=0.05, depth=0.4, name='Cylinder', properties=dict(physics=True, collision_shape='CONVEX_HULL', class_id=2))
+    cylinder.location = (1 * np.random.rand() - 0.5, 1 * np.random.rand() - 0.5, np.random.rand() * 10)
+for i in range(50):
+    bf.remove_highest()
+    bf.physics_simulation(max_simulation_time=10)
+    bf.render_color('/tmp/{}.png'.format(i))
+    bf.save_blend('/tmp/{}.blend'.format(i))

@@ -30,4 +30,12 @@ def save_blend(filepath='/tmp/temp.blend'):
     bpy.ops.wm.save_as_mainfile(filepath=filepath)
 
 
+def seconds_to_frames(seconds: float) -> int:
+    return int(seconds * bpy.context.scene.render.fps)
+
+
+def frames_to_seconds(frames: int) -> float:
+    return float(frames) / bpy.context.scene.render.fps
+
+
 __all__ = ['save_blend']
