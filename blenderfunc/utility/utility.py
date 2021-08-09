@@ -25,9 +25,12 @@ def blender_func(func):
 
 
 def save_blend(filepath='/tmp/temp.blend'):
+    output_dir = os.path.dirname(filepath)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
     if os.path.exists(filepath):
         os.remove(filepath)
-    bpy.ops.wm.save_as_mainfile(filepath=filepath)
+    bpy.ops.wm.save_as_mainfile(filepath=filepath, relative_remap=False)
 
 
 def seconds_to_frames(seconds: float) -> int:

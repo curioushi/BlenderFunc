@@ -1,5 +1,12 @@
 from typing import List
+
 import bpy
+
+
+def initialize():
+    remove_all_data()
+    bpy.context.preferences.filepaths.texture_directory = ''
+    bpy.context.preferences.filepaths.render_output_directory = ''
 
 
 def remove_all_data():
@@ -47,4 +54,4 @@ def set_background_light(color: List[float] = None, strength: float = 1.0) -> bp
     return world
 
 
-__all__ = ['remove_all_data', 'remove_all_cameras', 'remove_all_meshes', 'set_background_light']
+__all__ = ['remove_all_data', 'remove_all_cameras', 'remove_all_meshes', 'set_background_light', 'initialize']

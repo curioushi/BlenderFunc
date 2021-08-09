@@ -1,8 +1,8 @@
 import os
-import bpy
-import math
-from PIL import Image
 from typing import List
+
+import bpy
+from PIL import Image
 from mathutils import Matrix
 
 
@@ -62,7 +62,7 @@ def set_projector(opencv_matrix: List[List[float]] = None,
     node_mapping = node_tree.nodes.new('ShaderNodeMapping')
     node_mapping.location = (600, 0)
     node_teximg = node_tree.nodes.new('ShaderNodeTexImage')
-    bpy.ops.image.open(filepath=os.path.abspath(image_path))
+    bpy.ops.image.open(filepath=os.path.abspath(image_path), relative_path=False)
     image_texture = bpy.data.images[os.path.basename(image_path)]
     node_teximg.image = image_texture
     node_teximg.extension = 'CLIP'
