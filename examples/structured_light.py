@@ -38,5 +38,5 @@ cube.location = (0, 0, 0.1)
 bf.set_camera(opencv_matrix=cam_K, image_resolution=image_resolution, pose=cam2world)
 for i, pattern_path in enumerate(proj_patterns):
     bf.set_projector(opencv_matrix=proj_K, pose=proj2world, image_path=pattern_path, flip_x=True)
-    bf.render_color('output/structured_light/{:04}.png'.format(i), denoiser='OPTIX')
+    bf.render_color('output/structured_light/{:04}.png'.format(i), samples=1)
     bf.save_blend('output/structured_light/{:04}.blend'.format(i))

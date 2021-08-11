@@ -100,8 +100,10 @@ def set_projector(opencv_matrix: List[List[float]] = None,
     # flip
     if flip_x:
         node_mul.inputs[1].default_value[0] = -1.0
+        node_mapping.inputs[1].default_value[0] = 1 - node_mapping.inputs[1].default_value[0]
     if flip_y:
         node_mul.inputs[1].default_value[1] = -1.0
+        node_mapping.inputs[1].default_value[1] = 1 - node_mapping.inputs[1].default_value[1]
     return projector
 
 
