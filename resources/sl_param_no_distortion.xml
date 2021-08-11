@@ -14,7 +14,7 @@
   <cols>5</cols>
   <dt>d</dt>
   <data>
-    0 0 0 0 0</data></CameraDistCoeffs>
+    0. 0. 0. 0. 0.</data></CameraDistCoeffs>
 <ProjectorIntrinsics type_id="opencv-matrix">
   <rows>3</rows>
   <cols>3</cols>
@@ -27,7 +27,7 @@
   <cols>5</cols>
   <dt>d</dt>
   <data>
-    0 0 0 0 0</data></ProjectorDistCoeffs>
+    0. 0. 0. 0. 0.</data></ProjectorDistCoeffs>
 <Rotation type_id="opencv-matrix">
   <rows>3</rows>
   <cols>3</cols>
