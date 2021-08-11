@@ -27,14 +27,14 @@ def get_structured_light_params(cam_height=1.5):
 
 
 cam_K, image_resolution, _, cam2world, _ = get_structured_light_params(2.5)
-num = 50
+num = 35
 
 bf.initialize()
 bf.set_background_light(strength=1)
 bf.set_camera(opencv_matrix=cam_K, image_resolution=image_resolution, pose=cam2world)
 bf.add_plane(size=100, properties=dict(physics=False, collision_shape='CONVEX_HULL'))
-tote = bf.add_tote(properties=dict(physics=False, collision_shape='MESH'))
-obj = bf.add_cylinder(radius=0.05, depth=0.25, properties=dict(physics=True, collision_shape='CONVEX_HULL'))
+tote = bf.add_tote(length=0.7, width=0.9, height=0.7, properties=dict(physics=False, collision_shape='MESH'))
+obj = bf.add_ply(filepath='resources/models/brake_disk.ply', properties=dict(physics=True, collision_shape='CONVEX_HULL'))
 pose_sampler = bf.in_tote_sampler(tote, obj, num)
 bf.collision_avoidance_positioning(obj, pose_sampler)
 for _ in range(num - 1):
@@ -44,5 +44,4 @@ for _ in range(num - 1):
 for i in range(num):
     bf.remove_highest_object()
     bf.physics_simulation()
-    bf.render_color('output/deep_tote/{:04}.png'.format(i), denoiser='NLM', samples=64)
-    bf.save_blend('output/deep_tote/{:04}.blend'.format(i))
+    bf.render_color('output/deep_tote_cont/{:04}.png'.format(i), samples=10)
