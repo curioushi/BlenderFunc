@@ -14,3 +14,22 @@ The differences between this project and BlenderProc are:
 ```shell
 blender --background --python examples/helloworld.py
 ```
+
+## Todo
+
+### features
+- [ ] shadow map
+- [ ] add_simple_texture
+- [ ] support BW output
+- [ ] material location, rotation, scale, main color
+- [ ] class map
+- [ ] segmentation map
+- [ ] pose output
+- [ ] camera distortion
+- [ ] projector distortion
+- [ ] calibration pipeline
+- [ ] upgrade collision checking
+- [ ] special format convert: coco, xyz-log
+- [ ] documentation
+### bugs
+- [ ] physics simulation origin wrong

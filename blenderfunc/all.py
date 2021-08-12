@@ -2,10 +2,12 @@ from blenderfunc.utility.utility import *
 from blenderfunc.utility.environment import *
 from blenderfunc.utility.custom_packages import *
 from blenderfunc.utility.initialize import *
+from blenderfunc.object.light import *
 from blenderfunc.object.camera import *
 from blenderfunc.object.projector import *
 from blenderfunc.object.meshes import *
 from blenderfunc.object.collector import *
 from blenderfunc.object.physics import *
 from blenderfunc.object.pose_sampler import *
+from blenderfunc.object.texture import *
 from blenderfunc.render.render import *

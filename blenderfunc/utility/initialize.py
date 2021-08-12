@@ -19,6 +19,18 @@ def remove_all_data():
                     data_structure.remove(block)
 
 
+def remove_all_images():
+    """remove all images"""
+    for img in bpy.data.images:
+        bpy.data.images.remove(img)
+
+
+def remove_all_materials():
+    """remove all materials"""
+    for mat in bpy.data.materials:
+        bpy.data.materials.remove(mat)
+
+
 def remove_all_meshes():
     """remove all mesh objects"""
     for mesh in bpy.data.meshes:
@@ -54,4 +66,5 @@ def set_background_light(color: List[float] = None, strength: float = 1.0) -> bp
     return world
 
 
-__all__ = ['remove_all_data', 'remove_all_cameras', 'remove_all_meshes', 'set_background_light', 'initialize']
+__all__ = ['remove_all_data', 'remove_all_cameras', 'remove_all_meshes', 'remove_all_materials', 'remove_all_images',
+           'set_background_light', 'initialize']

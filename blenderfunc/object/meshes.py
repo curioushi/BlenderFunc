@@ -1,4 +1,4 @@
-from typing import List
+from blenderfunc.object.texture import make_smart_uv_project
 import bpy
 
 
@@ -103,6 +103,7 @@ def add_tote(length: float = 1.0, width: float = 1.0, height: float = 0.5, thick
     mesh.update()
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.scene.collection.objects.link(obj)
+    make_smart_uv_project(obj)
     if properties is not None:
         for key, value in properties.items():
             obj[key] = value
@@ -114,6 +115,7 @@ def add_ply(filepath: str = None, name: str = 'PlyModel', properties: dict = Non
     obj = bpy.context.active_object
     obj.name = name
     obj.data.name = name
+    make_smart_uv_project(obj)
     if properties is not None:
         for key, value in properties.items():
             obj[key] = value

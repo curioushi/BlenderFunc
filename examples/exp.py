@@ -46,21 +46,20 @@ for _ in range(num - 1):
     obj = bf.duplicate_mesh_object(obj)
     bf.collision_avoidance_positioning(obj, pose_sampler)
 
-# bf.remove_highest_object()
 bf.physics_simulation(max_simulation_time=10)
-bf.render_depth('output/deep_tote_sl/depth.png')
-for bg_strength in [0, 1, 2]:
-    bf.set_background_light(strength=bg_strength)
-    for proj_energy in [5, 10, 25, 50, 100]:
-        output_dir = 'bg={:.1f}_proj={}'.format(bg_strength, proj_energy)
-        for j, pattern_path in enumerate(proj_patterns):
-            bf.set_projector(energy=proj_energy, opencv_matrix=proj_K, image_path=pattern_path, pose=proj2world,
-                             flip_x=True)
-            bf.render_color('output/deep_tote_sl/{}/{:04}.png'.format(output_dir, j),
-                            samples=10)
-            bf.save_blend('output/deep_tote_sl/{}/scene.blend'.format(output_dir))
-        subprocess.Popen(['/home/shq/Projects/xyz/xyz-structured-light/build/test/utest_rebuilder',
-                          '-i=/home/shq/Projects/mycode/BlenderFunc/output/deep_tote_sl/{}/'.format(output_dir),
-                          '-c=/home/shq/Projects/xyz/xyz-structured-light/build/test/StructuredLight.json']).wait()
-        shutil.move('depth_img.png', 'output/deep_tote_sl/{}/depth.png'.format(output_dir))
-        shutil.move('organized_cloud.pcd', 'output/deep_tote_sl/{}/cloud.pcd'.format(output_dir))
+bf.render_depth('output/texture_experiment/depth.png')
+bf.set_background_light(strength=1)
+mat_infos = bf.get_pbr_material_infos()
+for i, (mat_name, mat_path) in enumerate(mat_infos.items()):
+    bf.remove_all_images()
+    bf.remove_all_materials()
+    mat = bf.add_pbr_material(mat_path)
+    bf.set_material(obj, mat)
+    for j, pattern_path in enumerate(proj_patterns):
+        bf.set_projector(energy=20, opencv_matrix=proj_K, image_path=pattern_path, pose=proj2world, flip_x=True)
+        bf.render_color('output/texture_experiment/{}/{:04}.png'.format(mat_name, j), samples=10)
+    subprocess.Popen(['/home/shq/Projects/xyz/xyz-structured-light/build/test/utest_rebuilder',
+                      '-i=/home/shq/Projects/mycode/BlenderFunc/output/texture_experiment/{}/'.format(mat_name),
+                      '-c=/home/shq/Projects/xyz/xyz-structured-light/build/test/StructuredLight.json']).wait()
+    shutil.move('depth_img.png', 'output/texture_experiment/{}/depth.png'.format(mat_name))
+    shutil.move('organized_cloud.pcd', 'output/texture_experiment/{}/cloud.pcd'.format(mat_name))
