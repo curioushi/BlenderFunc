@@ -69,10 +69,23 @@ def simulation(min_simulation_time: float = 5.0, max_simulation_time: float = 10
                substeps_per_frame: int = 10, solver_iters: int = 10) -> dict:
     # Shift the origin of all objects to their center of mass to make the simulation more realistic
     origin_shift = {}
-    for obj in get_all_mesh_objects():
-        prev_origin = get_origin(obj)
-        new_origin = set_origin(obj, mode="CENTER_OF_VOLUME")
-        origin_shift[obj.name] = new_origin - prev_origin
+    prev_origins = {}
+
+    all_mesh_objects = get_all_mesh_objects()
+    for obj in all_mesh_objects:
+        prev_origins[obj.name] = get_origin(obj)
+
+    # Select all mesh objects, run origin set
+    for obj in bpy.data.objects:
+        if obj in all_mesh_objects:
+            obj.select_set(True)
+        else:
+            obj.select_set(False)
+    bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_VOLUME', center='MEDIAN')
+
+    for obj in all_mesh_objects:
+        new_origin = get_origin(obj)
+        origin_shift[obj.name] = new_origin - prev_origins[obj.name]
 
         # # Persist mesh scaling as having a scale != 1 can make the simulation unstable
         # persist_transformation_into_mesh(obj, location=False, rotation=False, scale=True)
@@ -156,15 +169,15 @@ def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: fl
         physics_collision_margin = obj.get('collision_margin', 0.0001)
         enable_rigid_body(obj, physics_type, physics_collision_shape, physics_collision_margin)
 
+    bpy.ops.ed.undo_push(message='before simulation')
     obj_poses_before_sim = get_active_objects_pose()
     origin_shifts = simulation(min_simulation_time, max_simulation_time)
     obj_poses_after_sim = get_active_objects_pose()
-
-    # remove simulation cache
     bpy.ops.ptcache.free_bake({"point_cache": bpy.context.scene.rigidbody_world.point_cache})
+    bpy.ops.ed.undo_push(message='after simulation')
+    bpy.ops.ed.undo()
 
     # Fix the pose of all objects to their pose at the and of the simulation (also revert origin shift)
-    bpy.context.scene.frame_current = 1
     objects_with_physics = [obj for obj in get_all_mesh_objects() if obj.rigid_body is not None]
     for obj in objects_with_physics:
         # Skip objects that have parents with compound rigid body component
@@ -186,7 +199,7 @@ def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: fl
 
 def remove_highest_object(mesh_objects: List[bpy.types.Object] = None):
     if mesh_objects is None:
-        mesh_objects = get_mesh_objects_by_custom_properties({"physics":True})
+        mesh_objects = get_mesh_objects_by_custom_properties({"physics": True})
 
     index = -1
     height = -float('inf')

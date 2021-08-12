@@ -44,9 +44,7 @@ bf.collision_avoidance_positioning(obj, pose_sampler)
 for _ in range(num - 1):
     obj = bf.duplicate_mesh_object(obj)
     bf.collision_avoidance_positioning(obj, pose_sampler)
-pbr_info = bf.get_pbr_material_infos()
-mat = bf.add_pbr_material(random.choice(list(pbr_info.values())), loc_x=0.2, loc_y=0.4, rot_x=40, rot_y=60, scale_x=2, scale_y=1.5)
-# mat = bf.add_simple_material(color=[1, 0, 0], metallic=1, roughness=0.3)
+mat = bf.add_simple_material(color=[1, 0, 0], metallic=1, roughness=0.3)
 bf.set_material(obj, mat)
 
 bf.physics_simulation()

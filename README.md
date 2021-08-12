@@ -33,4 +33,4 @@ blender --background --python examples/helloworld.py
 - [ ] documentation
 
 ### bugs
-- [ ] physics simulation origin wrong
+- [x] physics simulation origin wrong
