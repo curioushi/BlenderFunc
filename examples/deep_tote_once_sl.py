@@ -5,6 +5,7 @@ from blenderfunc.utility.custom_packages import setup_custom_packages
 
 setup_custom_packages(["numpy", "Pillow", "xmltodict"])
 
+import random
 import numpy as np
 import blenderfunc.all as bf
 from examples.utility import parse_camera_xml
@@ -43,8 +44,15 @@ bf.collision_avoidance_positioning(obj, pose_sampler)
 for _ in range(num - 1):
     obj = bf.duplicate_mesh_object(obj)
     bf.collision_avoidance_positioning(obj, pose_sampler)
+pbr_info = bf.get_pbr_material_infos()
+mat = bf.add_pbr_material(random.choice(list(pbr_info.values())), loc_x=0.2, loc_y=0.4, rot_x=40, rot_y=60, scale_x=2, scale_y=1.5)
+# mat = bf.add_simple_material(color=[1, 0, 0], metallic=1, roughness=0.3)
+bf.set_material(obj, mat)
 
 bf.physics_simulation()
 for i, pattern_path in enumerate(proj_patterns):
-    bf.set_projector(opencv_matrix=proj_K, image_path=pattern_path, pose=proj2world, flip_x=True)
-    bf.render_color('output/deep_tote_once_sl/{:04}.png'.format(i), samples=10)
+    proj = bf.set_projector(opencv_matrix=proj_K, image_path=pattern_path, pose=proj2world, flip_x=True)
+    bf.render_color('output/deep_tote_once_sl/{:04}.png'.format(i), samples=10, color_mode='RGB')
+    bf.save_blend('output/deep_tote_once_sl/{:04}.blend'.format(i))
+bf.render_shadow_mask('output/deep_tote_once_sl/shadow_mask.png', proj)
+bf.render_depth('output/deep_tote_once_sl/depth.png')

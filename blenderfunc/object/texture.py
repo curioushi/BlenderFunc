@@ -1,6 +1,8 @@
 import bpy
 import os
+import math
 from glob import glob
+from typing import List
 
 
 def get_pbr_material_infos(texture_root: str = 'resources/cctextures') -> dict:
@@ -35,7 +37,33 @@ def set_material(obj: bpy.types.Object, mat: bpy.types.Material):
     obj.data.materials.append(mat)
 
 
-def add_pbr_material(texture_folder: str, name: str = "Material") -> bpy.types.Material:
+def add_simple_material(color: List[float] = None, metallic: float = 0.0, roughness: float = 0.5,
+                        name: str = "Material") -> bpy.types.Material:
+    if color is None:
+        color = (0.8, 0.8, 0.8, 1)
+    elif len(color) == 3:
+        color.append(1)
+    mat = bpy.data.materials.new(name)
+    mat.use_nodes = True
+    tree = mat.node_tree
+    nodes = tree.nodes
+    links = tree.links
+    for node in tree.nodes:
+        tree.nodes.remove(node)
+    n_bsdf = nodes.new('ShaderNodeBsdfPrincipled')
+    n_output = nodes.new('ShaderNodeOutputMaterial')
+    links.new(n_bsdf.outputs['BSDF'], n_output.inputs['Surface'])
+
+    n_bsdf.inputs['Base Color'].default_value = color
+    n_bsdf.inputs['Metallic'].default_value = metallic
+    n_bsdf.inputs['Roughness'].default_value = roughness
+
+    return mat
+
+
+def add_pbr_material(texture_folder: str, name: str = "Material",
+                     loc_x: float = 0.0, loc_y: float = 0.0, rot_x: float = 0.0, rot_y: float = 0.0,
+                     scale_x: float = 1.0, scale_y: float = 1.0) -> bpy.types.Material:
     texture_paths = list(glob(texture_folder + '/*.jpg'))
 
     mat = bpy.data.materials.new(name)
@@ -142,6 +170,13 @@ def add_pbr_material(texture_folder: str, name: str = "Material") -> bpy.types.M
         n_disp.inputs['Scale'].default_value = 0.002
         links.new(n_disp.outputs['Displacement'], n_output.inputs['Displacement'])
 
+    n_mapping.inputs['Location'].default_value[0] = loc_x
+    n_mapping.inputs['Location'].default_value[1] = loc_y
+    n_mapping.inputs['Rotation'].default_value[0] = rot_x / 180 * math.pi
+    n_mapping.inputs['Rotation'].default_value[1] = rot_y / 180 * math.pi
+    n_mapping.inputs['Scale'].default_value[0] = scale_x
+    n_mapping.inputs['Scale'].default_value[1] = scale_y
+
     return mat
 
 
@@ -158,4 +193,5 @@ def make_smart_uv_project(obj: bpy.types.Object):
         raise Exception("only MESH object can be smart uv project")
 
 
-__all__ = ['get_pbr_material_infos', 'add_pbr_material', 'load_image', 'set_material', 'make_smart_uv_project']
+__all__ = ['get_pbr_material_infos', 'add_pbr_material', 'add_simple_material', 'load_image', 'set_material',
+           'make_smart_uv_project']

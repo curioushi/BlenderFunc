@@ -18,10 +18,10 @@ blender --background --python examples/helloworld.py
 ## Todo
 
 ### features
-- [ ] shadow map
-- [ ] add_simple_texture
-- [ ] support BW output
-- [ ] material location, rotation, scale, main color
+- [x] shadow map
+- [x] add_simple_texture
+- [x] support BW output
+- [x] material location, rotation, scale, main color
 - [ ] class map
 - [ ] segmentation map
 - [ ] pose output
@@ -31,5 +31,6 @@ blender --background --python examples/helloworld.py
 - [ ] upgrade collision checking
 - [ ] special format convert: coco, xyz-log
 - [ ] documentation
+
 ### bugs
 - [ ] physics simulation origin wrong
