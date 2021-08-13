@@ -4,6 +4,7 @@ import addon_utils
 import imageio
 import random
 import numpy as np
+from typing import List
 from blenderfunc.object.texture import load_image
 from blenderfunc.utility.initialize import remove_all_materials, set_background_light
 from blenderfunc.utility.utility import save_blend, get_object_by_name
@@ -221,8 +222,9 @@ def render_depth(filepath: str = '/tmp/temp.png', depth_scale=0.00005, save_blen
     bpy.ops.ed.undo()
 
 
-def _compute_index_color_map(num):
+def _compute_index_color_map(indices: List[int]):
     """ compute the mapping from index to color_center, color_min, color_max"""
+    num = len(indices)
     n_splits_per_dim = 1
     while n_splits_per_dim ** 3 < num:
         n_splits_per_dim += 1
@@ -241,8 +243,22 @@ def _compute_index_color_map(num):
     color_center = color_center.tolist()
     color_min = color_min.tolist()
     color_max = color_max.tolist()
-    mapping = {i: dict(color=color_center[i], min=color_min[i], max=color_max[i]) for i in range(num)}
+    mapping = {indices[i]: dict(color=color_center[i], min=color_min[i], max=color_max[i]) for i in range(num)}
     return mapping
+
+
+def _color2segmap(color: np.ndarray, index_color_map: dict):
+    r = color[:, :, 0]
+    g = color[:, :, 1]
+    b = color[:, :, 2]
+    segmap = np.zeros(color.shape[:2], dtype=np.int)
+    for index, val in index_color_map.items():
+        color_min = val['min']
+        color_max = val['max']
+        bool_mask = (r > color_min[0]) & (r < color_max[0]) & (g > color_min[1]) & (g < color_max[1]) & (
+                b > color_min[2]) & (b < color_max[2])
+        segmap[bool_mask] = index
+    return segmap
 
 
 def render_instance_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False):
@@ -255,7 +271,7 @@ def render_instance_segmap(filepath: str = '/tmp/temp.png', save_blend_file=Fals
 
     mesh_objects = get_all_mesh_objects()
     num = len(mesh_objects) + 1  # for background
-    index_color_map = _compute_index_color_map(num)
+    index_color_map = _compute_index_color_map([i for i in range(num)])
 
     # set color for background
     set_background_light(color=index_color_map[0]['color'])
@@ -305,7 +321,7 @@ def render_instance_segmap(filepath: str = '/tmp/temp.png', save_blend_file=Fals
     bpy.context.scene.frame_current = 1
     bpy.ops.render.render(use_viewport=True)
 
-    # postprocess, save visualize image
+    # save visualization image
     temp_output = os.path.join(output_dir, 'image0001.exr')
     color_segmap = imageio.imread(temp_output)
     os.remove(temp_output)
@@ -313,16 +329,7 @@ def render_instance_segmap(filepath: str = '/tmp/temp.png', save_blend_file=Fals
     imageio.imwrite(filepath, vis)
 
     # save numpy data
-    r = color_segmap[:, :, 0]
-    g = color_segmap[:, :, 1]
-    b = color_segmap[:, :, 2]
-    segmap = np.zeros(color_segmap.shape[:2], dtype=np.int)
-    for index, val in index_color_map.items():
-        color_min = val['min']
-        color_max = val['max']
-        bool_mask = (r > color_min[0]) & (r < color_max[0]) & (g > color_min[1]) & (g < color_max[1]) & (
-                b > color_min[2]) & (b < color_max[2])
-        segmap[bool_mask] = index
+    segmap = _color2segmap(color_segmap, index_color_map)
     np.savez_compressed(os.path.splitext(filepath)[0] + '.npz', data=segmap)
     print('image saved: {}'.format(filepath))
 
@@ -333,4 +340,88 @@ def render_instance_segmap(filepath: str = '/tmp/temp.png', save_blend_file=Fals
     bpy.ops.ed.undo()
 
 
-__all__ = ['render_color', 'render_depth', 'render_shadow_mask', 'render_instance_segmap']
+def render_class_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False):
+    if os.path.splitext(filepath)[-1] not in ['.png']:
+        raise Exception('Unsupported image format: {}'.format(os.path.splitext(filepath)))
+
+    bpy.ops.ed.undo_push(message='before render_class_segmap()')
+
+    _initialize_renderer(samples=1, denoiser=None, max_bounces=0, auto_tile_size=True, num_threads=1)
+
+    mesh_objects = get_all_mesh_objects()
+    class_indices = [0]  # zero for unknown class
+    for obj in mesh_objects:
+        class_indices.append(obj.get('class_id', 0))
+    class_indices = sorted(list(set(class_indices)))
+    index_color_map = _compute_index_color_map(class_indices)
+    print(index_color_map)
+
+    # set color for background
+    set_background_light(color=index_color_map[0]['color'])
+
+    # set color for each object
+    remove_all_materials()
+    for obj in mesh_objects:
+        mesh = obj.data.copy()
+        obj.data = mesh
+        mat = bpy.data.materials.new('Material')
+        mat.use_nodes = True
+        tree = mat.node_tree
+        nodes = tree.nodes
+        links = tree.links
+        nodes.remove(nodes['Principled BSDF'])
+        n_emission = nodes.new('ShaderNodeEmission')
+        n_output = nodes['Material Output']
+        links.new(n_emission.outputs['Emission'], n_output.inputs['Surface'])
+        index = obj.get('class_id', 0)
+        color = index_color_map[index]['color']
+        n_emission.inputs['Color'].default_value[0] = color[0]
+        n_emission.inputs['Color'].default_value[1] = color[1]
+        n_emission.inputs['Color'].default_value[2] = color[2]
+        mesh.materials.clear()
+        mesh.materials.append(mat)
+
+    # make output dir
+    output_dir = os.path.abspath(os.path.dirname(filepath))
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+
+    # make node tree
+    scene = bpy.data.scenes['Scene']
+    scene.use_nodes = True
+    node_tree = scene.node_tree
+    for node in node_tree.nodes:
+        node_tree.nodes.remove(node)
+    render_layers_node = node_tree.nodes.new('CompositorNodeRLayers')
+    file_output_node = node_tree.nodes.new('CompositorNodeOutputFile')
+    file_output_node.base_path = output_dir
+    file_output_node.file_slots['Image'].path = 'image'
+    file_output_node.format.file_format = 'OPEN_EXR'
+    file_output_node.format.color_mode = 'RGB'
+    file_output_node.format.color_depth = '32'
+    node_tree.links.new(render_layers_node.outputs['Image'], file_output_node.inputs['Image'])
+
+    # render
+    bpy.context.scene.frame_current = 1
+    bpy.ops.render.render(use_viewport=True)
+
+    # save visualization mage
+    temp_output = os.path.join(output_dir, 'image0001.exr')
+    color_segmap = imageio.imread(temp_output)
+    os.remove(temp_output)
+    vis = (color_segmap * 255).astype(np.uint8)
+    imageio.imwrite(filepath, vis)
+
+    # save numpy data
+    segmap = _color2segmap(color_segmap, index_color_map)
+    np.savez_compressed(os.path.splitext(filepath)[0] + '.npz', data=segmap)
+    print('image saved: {}'.format(filepath))
+
+    if save_blend_file:
+        save_blend(os.path.splitext(filepath)[0] + '.blend')
+
+    bpy.ops.ed.undo_push(message='after render_class_segmap()')
+    bpy.ops.ed.undo()
+
+
+__all__ = ['render_color', 'render_depth', 'render_shadow_mask', 'render_instance_segmap', 'render_class_segmap']

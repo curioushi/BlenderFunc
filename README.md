@@ -23,7 +23,7 @@ blender --background --python examples/helloworld.py
 - [x] support BW output
 - [x] material location, rotation, scale, main color
 - [x] save_blend_file for each renderer
-- [ ] class segmap
+- [x] class segmap
 - [x] instance segmap
 - [ ] normal
 - [ ] pose output

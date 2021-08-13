@@ -36,10 +36,11 @@ proj_patterns = sorted(glob('resources/images/sl_patterns/*.bmp'))
 bf.initialize()
 bf.set_background_light(strength=1)
 bf.set_camera(opencv_matrix=cam_K, image_resolution=image_resolution, pose=cam2world)
-bf.add_plane(size=100, properties=dict(physics=False, collision_shape='CONVEX_HULL'))
-tote = bf.add_tote(length=0.7, width=0.9, height=0.7, properties=dict(physics=False, collision_shape='MESH'))
+bf.add_plane(size=100, properties=dict(physics=False, collision_shape='CONVEX_HULL', class_id=1))
+tote = bf.add_tote(length=0.7, width=0.9, height=0.7,
+                   properties=dict(physics=False, collision_shape='MESH', class_id=2))
 obj = bf.add_ply(filepath='resources/models/brake_disk.ply',
-                 properties=dict(physics=True, collision_shape='CONVEX_HULL'))
+                 properties=dict(physics=True, collision_shape='CONVEX_HULL', class_id=3))
 pose_sampler = bf.in_tote_sampler(tote, obj, num)
 bf.collision_avoidance_positioning(obj, pose_sampler)
 for _ in range(num - 1):
@@ -55,3 +56,4 @@ for i, pattern_path in enumerate(proj_patterns):
 bf.render_shadow_mask('output/deep_tote_once_sl/shadow_mask.png', proj, save_blend_file=True)
 bf.render_depth('output/deep_tote_once_sl/depth.png', save_blend_file=True)
 bf.render_instance_segmap('output/deep_tote_once_sl/instance.png', save_blend_file=True)
+bf.render_class_segmap('output/deep_tote_once_sl/class.png', save_blend_file=True)
