@@ -22,8 +22,10 @@ blender --background --python examples/helloworld.py
 - [x] add_simple_texture
 - [x] support BW output
 - [x] material location, rotation, scale, main color
-- [ ] class map
-- [ ] segmentation map
+- [x] save_blend_file for each renderer
+- [ ] class segmap
+- [x] instance segmap
+- [ ] normal
 - [ ] pose output
 - [ ] camera distortion
 - [ ] projector distortion
