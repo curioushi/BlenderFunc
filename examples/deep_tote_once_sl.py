@@ -57,3 +57,4 @@ bf.render_shadow_mask('output/deep_tote_once_sl/shadow_mask.png', proj, save_ble
 bf.render_depth('output/deep_tote_once_sl/depth.png', save_blend_file=True)
 bf.render_instance_segmap('output/deep_tote_once_sl/instance.png', save_blend_file=True)
 bf.render_class_segmap('output/deep_tote_once_sl/class.png', save_blend_file=True)
+bf.render_normal_map('output/deep_tote_once_sl/normal.png', save_blend_file=True)

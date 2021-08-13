@@ -106,7 +106,7 @@ def render_shadow_mask(filepath: str = '/tmp/temp.png', light_name: str = '', sa
 
     bpy.ops.ed.undo_push(message='before render_shadow_mask()')
 
-    _initialize_renderer(samples=1, denoiser=None, max_bounces=0, auto_tile_size=True, num_threads=1)
+    _initialize_renderer(samples=10, denoiser=None, max_bounces=0, auto_tile_size=True, num_threads=1)
 
     # hide all other light sources
 
@@ -179,7 +179,7 @@ def render_depth(filepath: str = '/tmp/temp.png', depth_scale=0.00005, save_blen
 
     bpy.ops.ed.undo_push(message='before render_depth()')
 
-    _initialize_renderer(samples=1, denoiser=None, max_bounces=0, auto_tile_size=True, num_threads=1)
+    _initialize_renderer(samples=50, denoiser=None, max_bounces=0, auto_tile_size=True, num_threads=1)
 
     # make output folder
     output_dir = os.path.abspath(os.path.dirname(filepath))
@@ -267,7 +267,7 @@ def render_instance_segmap(filepath: str = '/tmp/temp.png', save_blend_file=Fals
 
     bpy.ops.ed.undo_push(message='before render_instance_segmap()')
 
-    _initialize_renderer(samples=1, denoiser=None, max_bounces=0, auto_tile_size=True, num_threads=1)
+    _initialize_renderer(samples=10, denoiser=None, max_bounces=0, auto_tile_size=True, num_threads=1)
 
     mesh_objects = get_all_mesh_objects()
     num = len(mesh_objects) + 1  # for background
@@ -346,7 +346,7 @@ def render_class_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False):
 
     bpy.ops.ed.undo_push(message='before render_class_segmap()')
 
-    _initialize_renderer(samples=1, denoiser=None, max_bounces=0, auto_tile_size=True, num_threads=1)
+    _initialize_renderer(samples=10, denoiser=None, max_bounces=0, auto_tile_size=True, num_threads=1)
 
     mesh_objects = get_all_mesh_objects()
     class_indices = [0]  # zero for unknown class
@@ -424,4 +424,73 @@ def render_class_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False):
     bpy.ops.ed.undo()
 
 
-__all__ = ['render_color', 'render_depth', 'render_shadow_mask', 'render_instance_segmap', 'render_class_segmap']
+def render_normal_map(filepath: str = '/tmp/temp.png', save_blend_file=False):
+    if os.path.splitext(filepath)[-1] not in ['.png']:
+        raise Exception('Unsupported image format: {}'.format(os.path.splitext(filepath)))
+
+    bpy.ops.ed.undo_push(message='before render_normal_map()')
+
+    _initialize_renderer(samples=50, denoiser=None, max_bounces=0, auto_tile_size=True, num_threads=1)
+
+    set_background_light(strength=0)
+
+    # set material for all meshes
+    for mesh in bpy.data.meshes:
+        mat = bpy.data.materials.new('Material')
+        mat.use_nodes = True
+        tree = mat.node_tree
+        nodes = tree.nodes
+        links = tree.links
+        nodes.remove(nodes['Principled BSDF'])
+        n_emission = nodes.new('ShaderNodeEmission')
+        n_normal_map = nodes.new('ShaderNodeNormalMap')
+        n_output = nodes['Material Output']
+        links.new(n_normal_map.outputs['Normal'], n_emission.inputs['Color'])
+        links.new(n_emission.outputs['Emission'], n_output.inputs['Surface'])
+        mesh.materials.clear()
+        mesh.materials.append(mat)
+
+    # make output dir
+    output_dir = os.path.abspath(os.path.dirname(filepath))
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+
+    # make node tree
+    scene = bpy.data.scenes['Scene']
+    scene.use_nodes = True
+    node_tree = scene.node_tree
+    for node in node_tree.nodes:
+        node_tree.nodes.remove(node)
+    render_layers_node = node_tree.nodes.new('CompositorNodeRLayers')
+    file_output_node = node_tree.nodes.new('CompositorNodeOutputFile')
+    file_output_node.base_path = output_dir
+    file_output_node.file_slots['Image'].path = 'image'
+    file_output_node.format.file_format = 'OPEN_EXR'
+    file_output_node.format.color_mode = 'RGB'
+    file_output_node.format.color_depth = '32'
+    node_tree.links.new(render_layers_node.outputs['Image'], file_output_node.inputs['Image'])
+
+    # render
+    bpy.context.scene.frame_current = 1
+    bpy.ops.render.render(use_viewport=True)
+
+    # save visualization mage
+    temp_output = os.path.join(output_dir, 'image0001.exr')
+    normal = imageio.imread(temp_output)
+    os.remove(temp_output)
+    vis = ((normal/2 + 0.5) * 255).astype(np.uint8)
+    imageio.imwrite(filepath, vis)
+
+    # save numpy data
+    np.savez_compressed(os.path.splitext(filepath)[0] + '.npz', data=normal)
+    print('image saved: {}'.format(filepath))
+
+    if save_blend_file:
+        save_blend(os.path.splitext(filepath)[0] + '.blend')
+
+    bpy.ops.ed.undo_push(message='after render_normal_map()')
+    bpy.ops.ed.undo()
+
+
+__all__ = ['render_color', 'render_depth', 'render_shadow_mask', 'render_instance_segmap', 'render_class_segmap',
+           'render_normal_map']

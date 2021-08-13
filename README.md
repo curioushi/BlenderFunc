@@ -25,7 +25,7 @@ blender --background --python examples/helloworld.py
 - [x] save_blend_file for each renderer
 - [x] class segmap
 - [x] instance segmap
-- [ ] normal
+- [x] normal
 - [ ] pose output
 - [ ] camera distortion
 - [ ] projector distortion
