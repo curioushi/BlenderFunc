@@ -11,7 +11,7 @@ def set_camera(opencv_matrix: List[List[float]] = None,
                pose: List[List[float]] = None,
                clip_start: float = 0.1,
                clip_end: float = 100,
-               name: str = 'Camera') -> bpy.types.Object:
+               name: str = 'Camera') -> str:
     if opencv_matrix is None:
         opencv_matrix = [[400, 0, 400], [0, 400, 300], [0, 0, 1]]
     if image_resolution is None:
@@ -70,7 +70,7 @@ def set_camera(opencv_matrix: List[List[float]] = None,
     blender_pose = np.array(pose).dot(Q)
     cam_ob.matrix_world = Matrix(blender_pose)
 
-    return cam_ob
+    return cam_ob.name
 
 
 __all__ = ['set_camera']

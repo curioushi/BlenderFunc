@@ -41,4 +41,20 @@ def frames_to_seconds(frames: int) -> float:
     return float(frames) / bpy.context.scene.render.fps
 
 
-__all__ = ['save_blend']
+def get_object_by_name(name: str) -> bpy.types.Object:
+    obj = bpy.data.objects.get(name, None)
+    if obj:
+        return obj
+    else:
+        raise Exception('Object "{}" does not exist'.format(name))
+
+
+def get_material_by_name(name: str) -> bpy.types.Material:
+    obj = bpy.data.materials.get(name, None)
+    if obj:
+        return obj
+    else:
+        raise Exception('Material "{}" does not exist'.format(name))
+
+
+__all__ = ['save_blend', 'get_material_by_name', 'get_object_by_name']

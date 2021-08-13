@@ -8,7 +8,8 @@ import blenderfunc.all as bf
 bf.initialize()
 bf.set_background_light(color=[0.5, 0.5, 0.5], strength=1)
 bf.add_plane(10)
-cube = bf.add_cube(1)
+cube_name = bf.add_cube(1)
+cube = bf.get_object_by_name(cube_name)
 cube.location = (0, 0, 0.5)
 bf.set_camera(pose=[[-0.6440926790237427, 0.6483752727508545, -0.40589916706085205, 1.6972744464874268],
                     [0.7560893297195435, 0.45909714698791504, -0.4664319157600403, 1.8544113636016846],

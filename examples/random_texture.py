@@ -44,13 +44,14 @@ bf.set_camera(opencv_matrix=[[1200, 0, 500],
 bf.add_light(location=[0.32, -0.19, 0.34],
              energy=30)
 bf.add_plane(size=100, properties=dict(physics=False, collision_shape='CONVEX_HULL', collision_margin=0.00001))
-obj = bf.add_ply(filepath='resources/models/brake_disk.ply',
+obj_name = bf.add_ply(filepath='resources/models/brake_disk.ply',
                  properties=dict(physics=True, collision_shape='CONVEX_HULL', collision_margin=0.00001))
+obj = bf.get_object_by_name(obj_name)
 obj.location = (0, 0, 0.1)
 
 pbr_infos = bf.get_pbr_material_infos()
 for name, path in pbr_infos.items():
     bf.remove_all_materials()
-    mat = bf.add_pbr_material(path)
-    bf.set_material(obj, mat)
+    mat_name = bf.add_pbr_material(path)
+    bf.set_material(obj_name, mat_name)
     bf.render_color('output/random_texture/{}.png'.format(name), denoiser='OPTIX', samples=100)

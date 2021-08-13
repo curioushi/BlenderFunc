@@ -12,7 +12,7 @@ def set_projector(opencv_matrix: List[List[float]] = None,
                   energy: float = 100.0,
                   flip_x: bool = False,
                   flip_y: bool = False,
-                  max_bounces: int = 0) -> bpy.types.Object:
+                  max_bounces: int = 0) -> str:
     if opencv_matrix is None:
         opencv_matrix = [[512, 0, 256], [0, 512, 256], [0, 0, 1]]
     if image_path is None:
@@ -104,7 +104,7 @@ def set_projector(opencv_matrix: List[List[float]] = None,
     if flip_y:
         node_mul.inputs[1].default_value[1] = -1.0
         node_mapping.inputs[1].default_value[1] = 1 - node_mapping.inputs[1].default_value[1]
-    return projector
+    return projector.name
 
 
 __all__ = ['set_projector']

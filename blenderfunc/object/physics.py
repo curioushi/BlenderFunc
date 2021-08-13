@@ -9,9 +9,9 @@ from blenderfunc.object.collector import get_all_mesh_objects, get_mesh_objects_
 from blenderfunc.utility.utility import seconds_to_frames
 
 
-def enable_rigid_body(obj: bpy.types.Object, physics_type: str = 'PASSIVE',
-                      physics_collision_shape: str = 'CONVEX_HULL',
-                      physics_collision_margin: float = None):
+def _enable_rigid_body(obj: bpy.types.Object, physics_type: str = 'PASSIVE',
+                       physics_collision_shape: str = 'CONVEX_HULL',
+                       physics_collision_margin: float = None):
     bpy.ops.rigidbody.object_add({'object': obj})
     obj.rigid_body.type = physics_type
     obj.rigid_body.collision_shape = physics_collision_shape
@@ -19,15 +19,15 @@ def enable_rigid_body(obj: bpy.types.Object, physics_type: str = 'PASSIVE',
     obj.rigid_body.collision_margin = physics_collision_margin
 
 
-def disable_rigid_body(obj: bpy.types.Object):
+def _disable_rigid_body(obj: bpy.types.Object):
     bpy.ops.rigidbody.object_remove({'object': obj})
 
 
-def get_origin(obj: bpy.types.Object) -> Vector:
+def _get_origin(obj: bpy.types.Object) -> Vector:
     return obj.location.copy()
 
 
-def set_origin(obj: bpy.types.Object, point: Union[list, Vector] = None, mode: str = "POINT") -> Vector:
+def _set_origin(obj: bpy.types.Object, point: Union[list, Vector] = None, mode: str = "POINT") -> Vector:
     context = {"selected_editable_objects": [obj]}
 
     if mode == "POINT":
@@ -44,16 +44,16 @@ def set_origin(obj: bpy.types.Object, point: Union[list, Vector] = None, mode: s
     else:
         raise Exception("No such mode: " + mode)
 
-    return get_origin(obj)
+    return _get_origin(obj)
 
 
-def persist_transformation_into_mesh(obj: bpy.types.Object, location: bool = True, rotation: bool = True,
-                                     scale: bool = True):
+def _persist_transformation_into_mesh(obj: bpy.types.Object, location: bool = True, rotation: bool = True,
+                                      scale: bool = True):
     bpy.ops.object.transform_apply({"selected_editable_objects": [obj]}, location=location, rotation=rotation,
                                    scale=scale)
 
 
-def get_active_objects_pose() -> dict:
+def _get_active_objects_pose() -> dict:
     objects_poses = {}
     for obj in get_all_mesh_objects():
         if obj.rigid_body.type == 'ACTIVE':
@@ -64,16 +64,16 @@ def get_active_objects_pose() -> dict:
     return objects_poses
 
 
-def simulation(min_simulation_time: float = 5.0, max_simulation_time: float = 10.0, check_object_interval: float = 1.0,
-               object_stopped_location_threshold: float = 0.01, object_stopped_rotation_threshold: float = 1.0,
-               substeps_per_frame: int = 10, solver_iters: int = 10) -> dict:
+def _simulation(min_simulation_time: float = 5.0, max_simulation_time: float = 10.0, check_object_interval: float = 1.0,
+                object_stopped_location_threshold: float = 0.01, object_stopped_rotation_threshold: float = 1.0,
+                substeps_per_frame: int = 10, solver_iters: int = 10) -> dict:
     # Shift the origin of all objects to their center of mass to make the simulation more realistic
     origin_shift = {}
     prev_origins = {}
 
     all_mesh_objects = get_all_mesh_objects()
     for obj in all_mesh_objects:
-        prev_origins[obj.name] = get_origin(obj)
+        prev_origins[obj.name] = _get_origin(obj)
 
     # Select all mesh objects, run origin set
     for obj in bpy.data.objects:
@@ -84,7 +84,7 @@ def simulation(min_simulation_time: float = 5.0, max_simulation_time: float = 10
     bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_VOLUME', center='MEDIAN')
 
     for obj in all_mesh_objects:
-        new_origin = get_origin(obj)
+        new_origin = _get_origin(obj)
         origin_shift[obj.name] = new_origin - prev_origins[obj.name]
 
         # # Persist mesh scaling as having a scale != 1 can make the simulation unstable
@@ -95,15 +95,15 @@ def simulation(min_simulation_time: float = 5.0, max_simulation_time: float = 10
     bpy.context.scene.rigidbody_world.solver_iterations = solver_iters
 
     # Perform simulation
-    bake_physics_simulation(min_simulation_time, max_simulation_time, check_object_interval,
-                            object_stopped_location_threshold,
-                            object_stopped_rotation_threshold)
+    _bake_physics_simulation(min_simulation_time, max_simulation_time, check_object_interval,
+                             object_stopped_location_threshold,
+                             object_stopped_rotation_threshold)
 
     return origin_shift
 
 
-def have_objects_stopped_moving(last_poses: dict, new_poses: dict, object_stopped_location_threshold: float,
-                                object_stopped_rotation_threshold: float) -> bool:
+def _have_objects_stopped_moving(last_poses: dict, new_poses: dict, object_stopped_location_threshold: float,
+                                 object_stopped_rotation_threshold: float) -> bool:
     """ Check if the difference between the two given poses per object is smaller than the configured threshold.
     """
     stopped = True
@@ -122,8 +122,8 @@ def have_objects_stopped_moving(last_poses: dict, new_poses: dict, object_stoppe
     return stopped
 
 
-def bake_physics_simulation(min_simulation_time: float, max_simulation_time: float, check_object_interval: float,
-                            object_stopped_location_threshold: float, object_stopped_rotation_threshold: float):
+def _bake_physics_simulation(min_simulation_time: float, max_simulation_time: float, check_object_interval: float,
+                             object_stopped_location_threshold: float, object_stopped_rotation_threshold: float):
     # Run simulation
     point_cache = bpy.context.scene.rigidbody_world.point_cache
     point_cache.frame_start = 1
@@ -142,15 +142,15 @@ def bake_physics_simulation(min_simulation_time: float, max_simulation_time: flo
 
         # Go to second last frame and get poses
         bpy.context.scene.frame_set(current_frame - seconds_to_frames(1))
-        old_poses = get_active_objects_pose()
+        old_poses = _get_active_objects_pose()
 
         # Go to last frame of simulation and get poses
         bpy.context.scene.frame_set(current_frame)
-        new_poses = get_active_objects_pose()
+        new_poses = _get_active_objects_pose()
 
         # If objects have stopped moving between the last two frames, then stop here
-        if have_objects_stopped_moving(old_poses, new_poses, object_stopped_location_threshold,
-                                       object_stopped_rotation_threshold):
+        if _have_objects_stopped_moving(old_poses, new_poses, object_stopped_location_threshold,
+                                        object_stopped_rotation_threshold):
             print("Objects have stopped moving after " + str(current_time) + "  seconds (" + str(
                 current_frame) + " frames)")
             break
@@ -167,12 +167,12 @@ def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: fl
         physics_type = 'ACTIVE' if obj.get('physics', False) else 'PASSIVE'
         physics_collision_shape = obj.get('collision_shape', 'CONVEX_HULL')
         physics_collision_margin = obj.get('collision_margin', 0.0001)
-        enable_rigid_body(obj, physics_type, physics_collision_shape, physics_collision_margin)
+        _enable_rigid_body(obj, physics_type, physics_collision_shape, physics_collision_margin)
 
     bpy.ops.ed.undo_push(message='before simulation')
-    obj_poses_before_sim = get_active_objects_pose()
-    origin_shifts = simulation(min_simulation_time, max_simulation_time)
-    obj_poses_after_sim = get_active_objects_pose()
+    obj_poses_before_sim = _get_active_objects_pose()
+    origin_shifts = _simulation(min_simulation_time, max_simulation_time)
+    obj_poses_after_sim = _get_active_objects_pose()
     bpy.ops.ptcache.free_bake({"point_cache": bpy.context.scene.rigidbody_world.point_cache})
     bpy.ops.ed.undo_push(message='after simulation')
     bpy.ops.ed.undo()
@@ -194,7 +194,7 @@ def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: fl
 
     # unset rigid bodys
     for obj in get_all_mesh_objects():
-        disable_rigid_body(obj)
+        _disable_rigid_body(obj)
 
 
 def remove_highest_object(mesh_objects: List[bpy.types.Object] = None):
@@ -207,7 +207,7 @@ def remove_highest_object(mesh_objects: List[bpy.types.Object] = None):
         if obj.location[-1] > height:
             height = obj.location[-1]
             index = i
-    remove_mesh_object(mesh_objects[index])
+    remove_mesh_object(mesh_objects[index].name)
 
 
 __all__ = ['physics_simulation', 'remove_highest_object']

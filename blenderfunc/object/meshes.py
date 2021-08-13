@@ -1,15 +1,18 @@
 from blenderfunc.object.texture import make_smart_uv_project
+from blenderfunc.utility.utility import get_object_by_name
 import bpy
 
 
-def remove_mesh_object(obj: bpy.types.Object):
-    if obj.type == 'MESH':
-        bpy.data.objects.remove(obj)
-    else:
-        raise Exception('This object is not a mesh: {}'.format(obj.name))
+def remove_mesh_object(obj_name: str):
+    obj = bpy.data.objects.get(obj_name, None)
+    if obj:
+        if obj.type == 'MESH':
+            bpy.data.objects.remove(obj)
+        else:
+            raise Exception('This object is not a mesh: {}'.format(obj.name))
 
 
-def add_plane(size: float = 1.0, name: str = 'Plane', properties: dict = None) -> bpy.types.Object:
+def add_plane(size: float = 1.0, name: str = 'Plane', properties: dict = None) -> str:
     bpy.ops.mesh.primitive_plane_add(size=size)
     obj = bpy.context.active_object
     obj.name = name
@@ -18,10 +21,10 @@ def add_plane(size: float = 1.0, name: str = 'Plane', properties: dict = None) -
     if properties is not None:
         for key, value in properties.items():
             obj[key] = value
-    return obj
+    return obj.name
 
 
-def add_cube(size: float = 2.0, name: str = 'Cube', properties: dict = None) -> bpy.types.Object:
+def add_cube(size: float = 2.0, name: str = 'Cube', properties: dict = None) -> str:
     bpy.ops.mesh.primitive_cube_add(size=size)
     obj = bpy.context.active_object
     obj.name = name
@@ -30,11 +33,11 @@ def add_cube(size: float = 2.0, name: str = 'Cube', properties: dict = None) -> 
     if properties is not None:
         for key, value in properties.items():
             obj[key] = value
-    return obj
+    return obj.name
 
 
 def add_cylinder(radius: float = 0.1, depth: float = 0.3, vertices: int = 64, name: str = 'Cylinder',
-                 properties: dict = None) -> bpy.types.Object:
+                 properties: dict = None) -> str:
     bpy.ops.mesh.primitive_cylinder_add(vertices=vertices, radius=radius, depth=depth)
     obj = bpy.context.active_object
     obj.name = name
@@ -43,11 +46,11 @@ def add_cylinder(radius: float = 0.1, depth: float = 0.3, vertices: int = 64, na
     if properties is not None:
         for key, value in properties.items():
             obj[key] = value
-    return obj
+    return obj.name
 
 
 def add_tote(length: float = 1.0, width: float = 1.0, height: float = 0.5, thickness: float = 0.02,
-             name: str = 'Tote', properties: dict = None) -> bpy.types.Object:
+             name: str = 'Tote', properties: dict = None) -> str:
     vertices = [
         # inner points
         (-length / 2, -width / 2, thickness),
@@ -103,29 +106,30 @@ def add_tote(length: float = 1.0, width: float = 1.0, height: float = 0.5, thick
     mesh.update()
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.scene.collection.objects.link(obj)
-    make_smart_uv_project(obj)
+    make_smart_uv_project(obj.name)
     if properties is not None:
         for key, value in properties.items():
             obj[key] = value
-    return obj
+    return obj.name
 
 
-def add_ply(filepath: str = None, name: str = 'PlyModel', properties: dict = None) -> bpy.types.Object:
+def add_ply(filepath: str = None, name: str = 'PlyModel', properties: dict = None) -> str:
     bpy.ops.import_mesh.ply(filepath=filepath)
     obj = bpy.context.active_object
     obj.name = name
     obj.data.name = name
-    make_smart_uv_project(obj)
+    make_smart_uv_project(obj.name)
     if properties is not None:
         for key, value in properties.items():
             obj[key] = value
-    return obj
+    return obj.name
 
 
-def duplicate_mesh_object(obj: bpy.types.Object) -> bpy.types.Object:
+def duplicate_mesh_object(obj_name: str) -> str:
+    obj = get_object_by_name(obj_name)
     bpy.context.view_layer.objects.active = obj
     bpy.ops.object.duplicate(linked=True)
-    return bpy.context.active_object
+    return bpy.context.active_object.name
 
 
 __all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_tote', 'add_ply', 'remove_mesh_object',

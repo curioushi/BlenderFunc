@@ -5,6 +5,7 @@ from blenderfunc.utility.custom_packages import setup_custom_packages
 
 setup_custom_packages(["numpy", "Pillow", "xmltodict"])
 
+import bpy
 import random
 import numpy as np
 import blenderfunc.all as bf
@@ -28,7 +29,7 @@ def get_structured_light_params(cam_height=1.5):
     return cam_K, image_resolution, proj_K, cam2world.tolist(), proj2world.tolist()
 
 
-num = 35
+num = 10
 cam_K, image_resolution, proj_K, cam2world, proj2world = get_structured_light_params(2.5)
 proj_patterns = sorted(glob('resources/images/sl_patterns/*.bmp'))
 
@@ -50,7 +51,7 @@ bf.set_material(obj, mat)
 bf.physics_simulation()
 for i, pattern_path in enumerate(proj_patterns):
     proj = bf.set_projector(opencv_matrix=proj_K, image_path=pattern_path, pose=proj2world, flip_x=True)
-    bf.render_color('output/deep_tote_once_sl/{:04}.png'.format(i), samples=10, color_mode='RGB')
-    bf.save_blend('output/deep_tote_once_sl/{:04}.blend'.format(i))
-bf.render_shadow_mask('output/deep_tote_once_sl/shadow_mask.png', proj)
-bf.render_depth('output/deep_tote_once_sl/depth.png')
+    bf.render_color('output/deep_tote_once_sl/{:04}.png'.format(i), samples=10, color_mode='RGB', save_blend_file=True)
+bf.render_shadow_mask('output/deep_tote_once_sl/shadow_mask.png', proj, save_blend_file=True)
+bf.render_depth('output/deep_tote_once_sl/depth.png', save_blend_file=True)
+bf.render_instance_segmap('output/deep_tote_once_sl/instance.png', save_blend_file=True)

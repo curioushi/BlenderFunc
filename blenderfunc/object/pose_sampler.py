@@ -3,47 +3,35 @@ import numpy as np
 from mathutils import Vector
 from typing import Callable, List
 from blenderfunc.object.physics import get_all_mesh_objects
+from blenderfunc.utility.utility import get_object_by_name
 
 
-def collision_avoidance_positioning(obj: bpy.types.Object, pose_sampler: Callable, max_trials: int = 100):
-    for i in range(max_trials):
-        pos, euler = pose_sampler()
-        obj.location = pos
-        obj.rotation_euler = euler
-        bpy.context.view_layer.update()
-        no_collision = check_no_collision(obj)
-        if no_collision:
-            print('Successfully positioning object in {} trials'.format(i + 1))
-            return
-    print('Failed to avoid collision when positioning')
-
-
-def check_no_collision(obj: bpy.types.Object):
+def _check_no_collision(obj: bpy.types.Object):
     objects_to_check_against = get_all_mesh_objects()
 
     no_collision = True
     for collision_obj in objects_to_check_against:
         if collision_obj == obj:
             continue
-        intersection = check_bb_intersection(obj, collision_obj)
+        intersection = _check_bb_intersection(obj, collision_obj)
         if intersection:
             no_collision = False
             break
     return no_collision
 
 
-def get_bound_box(obj: bpy.types.Object):
+def _get_bound_box(obj: bpy.types.Object):
     return [obj.matrix_world @ Vector(cord) for cord in obj.bound_box]
 
 
-def check_bb_intersection(obj1: bpy.types.Object, obj2: bpy.types.Object):
+def _check_bb_intersection(obj1: bpy.types.Object, obj2: bpy.types.Object):
     def min_and_max_point(bb):
         values = np.array(bb)
         return np.min(values, axis=0), np.max(values, axis=0)
 
-    bb1 = get_bound_box(obj1)
+    bb1 = _get_bound_box(obj1)
     min_b1, max_b1 = min_and_max_point(bb1)
-    bb2 = get_bound_box(obj2)
+    bb2 = _get_bound_box(obj2)
     min_b2, max_b2 = min_and_max_point(bb2)
 
     intersection = True
@@ -51,6 +39,20 @@ def check_bb_intersection(obj1: bpy.types.Object, obj2: bpy.types.Object):
         intersection = intersection and (max_b2_val >= min_b1_val and max_b1_val >= min_b2_val)
 
     return intersection
+
+
+def collision_avoidance_positioning(obj_name: str, pose_sampler: Callable, max_trials: int = 100):
+    obj = get_object_by_name(obj_name)
+    for i in range(max_trials):
+        pos, euler = pose_sampler()
+        obj.location = pos
+        obj.rotation_euler = euler
+        bpy.context.view_layer.update()
+        no_collision = _check_no_collision(obj)
+        if no_collision:
+            print('Successfully positioning object in {} trials'.format(i + 1))
+            return
+    print('Failed to avoid collision when positioning')
 
 
 def min_max_sampler(range1: List[float] = None, range2: List[float] = None, range3: List[float] = None):
@@ -66,7 +68,9 @@ def min_max_sampler(range1: List[float] = None, range2: List[float] = None, rang
     return ret
 
 
-def in_tote_sampler(tote: bpy.types.Object, obj: bpy.types.Object, num: int):
+def in_tote_sampler(tote_name: str, obj_name: str, num: int) -> Callable:
+    tote = get_object_by_name(tote_name)
+    obj = get_object_by_name(obj_name)
     length, width, height = tote.dimensions
     pts = []
     for vertex in obj.data.vertices:

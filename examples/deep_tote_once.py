@@ -42,5 +42,4 @@ for _ in range(num - 1):
     bf.collision_avoidance_positioning(obj, pose_sampler)
 
 bf.physics_simulation()
-bf.render_color('output/deep_tote_once/output.png')
-bf.save_blend('output/deep_tote_once/output.blend')
+bf.render_color('output/deep_tote_once/output.png', save_blend_file=True)

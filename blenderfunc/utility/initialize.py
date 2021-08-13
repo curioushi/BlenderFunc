@@ -49,7 +49,7 @@ def remove_all_lights():
         bpy.data.lights.remove(light)
 
 
-def set_background_light(color: List[float] = None, strength: float = 1.0) -> bpy.types.World:
+def set_background_light(color: List[float] = None, strength: float = 1.0) -> str:
     """set background lighting"""
     for world in bpy.data.worlds:
         bpy.data.worlds.remove(world)
@@ -63,7 +63,7 @@ def set_background_light(color: List[float] = None, strength: float = 1.0) -> bp
         color.append(1)
     world.node_tree.nodes['Background'].inputs['Color'].default_value = color
     world.node_tree.nodes['Background'].inputs['Strength'].default_value = strength
-    return world
+    return world.name
 
 
 __all__ = ['remove_all_data', 'remove_all_cameras', 'remove_all_meshes', 'remove_all_materials', 'remove_all_images',

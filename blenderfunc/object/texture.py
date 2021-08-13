@@ -3,6 +3,7 @@ import os
 import math
 from glob import glob
 from typing import List
+from blenderfunc.utility.utility import get_material_by_name, get_object_by_name
 
 
 def get_pbr_material_infos(texture_root: str = 'resources/cctextures') -> dict:
@@ -30,7 +31,9 @@ def load_image(path) -> bpy.types.Image:
     return bpy.data.images.load(os.path.abspath(path))
 
 
-def set_material(obj: bpy.types.Object, mat: bpy.types.Material):
+def set_material(obj_name: str, mat_name: str):
+    obj = get_object_by_name(obj_name)
+    mat = get_material_by_name(mat_name)
     if obj.type != 'MESH':
         raise Exception('Only mesh can set material')
     obj.data.materials.clear()
@@ -38,7 +41,7 @@ def set_material(obj: bpy.types.Object, mat: bpy.types.Material):
 
 
 def add_simple_material(color: List[float] = None, metallic: float = 0.0, roughness: float = 0.5,
-                        name: str = "Material") -> bpy.types.Material:
+                        name: str = "Material") -> str:
     if color is None:
         color = (0.8, 0.8, 0.8, 1)
     elif len(color) == 3:
@@ -58,12 +61,12 @@ def add_simple_material(color: List[float] = None, metallic: float = 0.0, roughn
     n_bsdf.inputs['Metallic'].default_value = metallic
     n_bsdf.inputs['Roughness'].default_value = roughness
 
-    return mat
+    return mat.name
 
 
 def add_pbr_material(texture_folder: str, name: str = "Material",
                      loc_x: float = 0.0, loc_y: float = 0.0, rot_x: float = 0.0, rot_y: float = 0.0,
-                     scale_x: float = 1.0, scale_y: float = 1.0) -> bpy.types.Material:
+                     scale_x: float = 1.0, scale_y: float = 1.0) -> str:
     texture_paths = list(glob(texture_folder + '/*.jpg'))
 
     mat = bpy.data.materials.new(name)
@@ -177,10 +180,11 @@ def add_pbr_material(texture_folder: str, name: str = "Material",
     n_mapping.inputs['Scale'].default_value[0] = scale_x
     n_mapping.inputs['Scale'].default_value[1] = scale_y
 
-    return mat
+    return mat.name
 
 
-def make_smart_uv_project(obj: bpy.types.Object):
+def make_smart_uv_project(obj_name: str):
+    obj = get_object_by_name(obj_name)
     if obj.type == 'MESH':
         prev_active = bpy.context.view_layer.objects.active
         bpy.context.view_layer.objects.active = obj
