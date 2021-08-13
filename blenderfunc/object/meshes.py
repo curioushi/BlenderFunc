@@ -1,6 +1,8 @@
-from blenderfunc.object.texture import make_smart_uv_project
-from blenderfunc.utility.utility import get_object_by_name
+import os
 import bpy
+from blenderfunc.object.texture import make_smart_uv_project
+from blenderfunc.object.collector import get_all_mesh_objects
+from blenderfunc.utility.utility import get_object_by_name
 
 
 def remove_mesh_object(obj_name: str):
@@ -132,5 +134,24 @@ def duplicate_mesh_object(obj_name: str) -> str:
     return bpy.context.active_object.name
 
 
+def write_meshes_info(filepath: str = '/tmp/temp.csv'):
+    if os.path.splitext(filepath)[-1] not in ['.csv']:
+        raise Exception('Unsupported file format: {}'.format(os.path.splitext(filepath)[-1]))
+
+    output_dir = os.path.abspath(os.path.dirname(filepath))
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+
+    mesh_objects = get_all_mesh_objects()
+    with open(filepath, 'w') as f:
+        f.write('instance_id, class_id, name, pose\n')
+        for i, obj in enumerate(mesh_objects):
+            instance_id = i + 1
+            class_id = obj.get('class_id', 0)
+            name = obj.name
+            pose = ' '.join([str(obj.matrix_world[0][0]) for i in range(3) for j in range(4)])
+            f.write('{}, {}, {}, {}\n'.format(instance_id, class_id, name, pose))
+
+
 __all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_tote', 'add_ply', 'remove_mesh_object',
-           'duplicate_mesh_object']
+           'duplicate_mesh_object', 'write_meshes_info']
