@@ -30,7 +30,7 @@ blender --background --python examples/helloworld.py
 - [ ] hdr downloader
 - [ ] hdr texture
 - [ ] camera distortion
-- [ ] projector distortion
+- [x] projector distortion
 - [ ] calibration pipeline
 - [ ] upgrade collision checking
 - [ ] special format convert: coco, xyz-log
