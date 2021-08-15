@@ -27,7 +27,7 @@ blender --background --python examples/helloworld.py
 - [x] instance segmap
 - [x] normal
 - [x] pose output
-- [ ] hdr downloader
+- [x] hdr downloader
 - [ ] hdr texture
 - [ ] camera distortion
 - [x] projector distortion
