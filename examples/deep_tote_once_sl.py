@@ -33,7 +33,7 @@ bf.physics_simulation()
 mat = bf.add_simple_material(color=[0, 0, 1], metallic=1, roughness=0.3)
 bf.set_material(obj, mat)
 
-for i, pattern_path in enumerate(proj_patterns[:1]):
+for i, pattern_path in enumerate(proj_patterns):
     proj = bf.set_projector(opencv_matrix=proj_K, image_path=pattern_path, distort_coeffs=proj_distort, pose=proj2world)
     bf.render_color('output/deep_tote_once_sl/{:04}.png'.format(i), samples=10, color_mode='RGB', save_blend_file=True)
 bf.render_shadow_mask('output/deep_tote_once_sl/shadow_mask.png', proj, save_blend_file=True)
