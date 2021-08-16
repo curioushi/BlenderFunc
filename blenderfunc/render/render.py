@@ -200,6 +200,7 @@ def render_shadow_mask(filepath: str = '/tmp/temp.png', light_name: str = '', sa
     if mask.ndim == 3:
         mask = mask[:, :, 0]
     mask = np.array((mask > 122) * 255).astype(np.uint8)
+    mask, _ = _distort_image(mask)
     imageio.imwrite(filepath, mask, compression=3)
     os.remove(temp_output)
     print('image saved: {}'.format(filepath))
@@ -246,6 +247,7 @@ def render_depth(filepath: str = '/tmp/temp.png', depth_scale=0.00005, save_blen
     depth = imageio.imread(temp_output)
     depth = depth[:, :, 0]
     depth[depth > 10] = float('nan')
+    depth, _ = _distort_image(depth)
     np.savez_compressed(os.path.splitext(filepath)[0] + '.npz', data=depth)
     depth = depth / depth_scale
     depth = depth.astype(np.uint16)
@@ -362,6 +364,7 @@ def render_instance_segmap(filepath: str = '/tmp/temp.png', save_blend_file=Fals
     # save visualization image
     temp_output = os.path.join(output_dir, 'image0001.exr')
     color_segmap = imageio.imread(temp_output)
+    color_segmap, _ = _distort_image(color_segmap)
     os.remove(temp_output)
     vis = (color_segmap * 255).astype(np.uint8)
     imageio.imwrite(filepath, vis, compression=3)
@@ -446,6 +449,7 @@ def render_class_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False):
     # save visualization mage
     temp_output = os.path.join(output_dir, 'image0001.exr')
     color_segmap = imageio.imread(temp_output)
+    color_segmap, _ = _distort_image(color_segmap)
     os.remove(temp_output)
     vis = (color_segmap * 255).astype(np.uint8)
     imageio.imwrite(filepath, vis, compression=3)
@@ -515,6 +519,7 @@ def render_normal_map(filepath: str = '/tmp/temp.png', save_blend_file=False):
     # save visualization mage
     temp_output = os.path.join(output_dir, 'image0001.exr')
     normal = imageio.imread(temp_output)
+    normal, _ = _distort_image(normal)
     os.remove(temp_output)
     vis = ((normal / 2 + 0.5) * 255).astype(np.uint8)
     imageio.imwrite(filepath, vis, compression=3)
