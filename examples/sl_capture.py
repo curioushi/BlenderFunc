@@ -5,7 +5,6 @@ from blenderfunc.utility.custom_packages import setup_custom_packages
 
 setup_custom_packages(["numpy", "Pillow", "xmltodict"])
 
-import numpy as np
 import blenderfunc.all as bf
 from examples.utility import compute_structured_light_params
 from glob import glob

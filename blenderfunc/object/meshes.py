@@ -127,6 +127,20 @@ def add_ply(filepath: str = None, name: str = 'PlyModel', properties: dict = Non
     return obj.name
 
 
+def add_obj(filepath: str = None, name: str = 'OBJModel', properties: dict = None) -> str:
+    bpy.ops.import_scene.obj(filepath=filepath)
+    objs = bpy.context.selected_objects
+    if len(objs) > 1:
+        raise Exception("Only support one object in OBJ file: {}".format(objs))
+    obj = objs[0]
+    obj.name = name
+    obj.data.name = name
+    if properties is not None:
+        for key, value in properties.items():
+            obj[key] = value
+    return obj.name
+
+
 def duplicate_mesh_object(obj_name: str) -> str:
     obj = get_object_by_name(obj_name)
     bpy.context.view_layer.objects.active = obj
@@ -153,5 +167,5 @@ def write_meshes_info(filepath: str = '/tmp/temp.csv'):
             f.write('{}, {}, {}, {}\n'.format(instance_id, class_id, name, pose))
 
 
-__all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_tote', 'add_ply', 'remove_mesh_object',
+__all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_tote', 'add_ply', 'add_obj', 'remove_mesh_object',
            'duplicate_mesh_object', 'write_meshes_info']
