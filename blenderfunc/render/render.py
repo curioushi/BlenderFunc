@@ -1,7 +1,9 @@
 import os
+import cv2
 import bpy
 import addon_utils
 import imageio
+import time
 import random
 import numpy as np
 from typing import List
@@ -9,6 +11,38 @@ from blenderfunc.object.texture import load_image
 from blenderfunc.utility.initialize import remove_all_materials, set_background_light
 from blenderfunc.utility.utility import save_blend, get_object_by_name
 from blenderfunc.object.collector import get_all_mesh_objects
+
+
+def _distort_image(image: np.ndarray):
+    camera_objs = []
+    for obj in bpy.data.objects:
+        if obj.type == 'CAMERA':
+            camera_objs.append(obj)
+    if len(camera_objs) != 1:
+        raise Exception('Number of camera objects should be one')
+    cam_ob = camera_objs[0]
+    camera_matrix = cam_ob.get('CameraMatrix', None)
+    distort_coeffs = cam_ob.get('DistortCoeffs', None)
+    if camera_matrix is None or distort_coeffs is None:
+        raise Exception('Camera should have custom properties: "CameraMatrix" and "DistortCoeffs"')
+    camera_matrix = np.array(camera_matrix, dtype=np.float32)
+    distort_coeffs = np.array(distort_coeffs, dtype=np.float32)
+    if np.all(distort_coeffs == 0):
+        return image, False
+
+    # distort image
+    pts = np.zeros(image.shape[:2] + (2,), dtype=np.float32)
+    for y in range(image.shape[0]):
+        for x in range(image.shape[1]):
+            pts[y, x, 0] = x
+            pts[y, x, 1] = y
+    distort_pts = cv2.undistortPoints(pts.reshape(-1, 2), cameraMatrix=camera_matrix,
+                                      distCoeffs=distort_coeffs, R=None, P=camera_matrix)
+    distort_pts = distort_pts.reshape(*pts.shape)
+    map_x = distort_pts[:, :, 0]
+    map_y = distort_pts[:, :, 1]
+    distorted_image = cv2.remap(image, map_x, map_y, cv2.INTER_LINEAR)
+    return distorted_image, True
 
 
 def _initialize_renderer(samples: int = 32, denoiser: str = None, max_bounces: int = 3, auto_tile_size: bool = True,
@@ -53,9 +87,9 @@ def _initialize_renderer(samples: int = 32, denoiser: str = None, max_bounces: i
     scene.render.simplify_subdivision_render = simplify_subdivision_render
 
 
-def render_color(filepath: str = '/tmp/temp.png', save_blend_file: bool = False, samples: int = 32,
-                 color_mode: str = 'RGB', color_depth: int = '8', auto_tile_size: bool = True, denoiser: str = None,
-                 num_threads: int = 1, max_bounces: int = 3):
+def render_color(filepath: str = '/tmp/temp.png', save_blend_file: bool = False,
+                 samples: int = 32, color_mode: str = 'RGB', color_depth: int = '8', auto_tile_size: bool = True,
+                 denoiser: str = None, num_threads: int = 1, max_bounces: int = 3):
     if os.path.splitext(filepath)[-1] not in ['.png']:
         raise Exception('unsupported image format: {}'.format(os.path.splitext(filepath)))
 
@@ -94,6 +128,10 @@ def render_color(filepath: str = '/tmp/temp.png', save_blend_file: bool = False,
 
     if save_blend_file:
         save_blend(os.path.splitext(filepath)[0] + '.blend')
+
+    distort_img, changed = _distort_image(imageio.imread(filepath))
+    if changed:
+        imageio.imwrite(filepath, distort_img, compression=3)
 
     bpy.ops.ed.undo_push(message='after render_color()')
     bpy.ops.ed.undo()
@@ -162,7 +200,7 @@ def render_shadow_mask(filepath: str = '/tmp/temp.png', light_name: str = '', sa
     if mask.ndim == 3:
         mask = mask[:, :, 0]
     mask = np.array((mask > 122) * 255).astype(np.uint8)
-    imageio.imwrite(filepath, mask)
+    imageio.imwrite(filepath, mask, compression=3)
     os.remove(temp_output)
     print('image saved: {}'.format(filepath))
 
@@ -211,7 +249,7 @@ def render_depth(filepath: str = '/tmp/temp.png', depth_scale=0.00005, save_blen
     np.savez_compressed(os.path.splitext(filepath)[0] + '.npz', data=depth)
     depth = depth / depth_scale
     depth = depth.astype(np.uint16)
-    imageio.imwrite(filepath, depth)
+    imageio.imwrite(filepath, depth, compression=3)
     os.remove(temp_output)
     print('image saved: {}'.format(filepath))
 
@@ -326,7 +364,7 @@ def render_instance_segmap(filepath: str = '/tmp/temp.png', save_blend_file=Fals
     color_segmap = imageio.imread(temp_output)
     os.remove(temp_output)
     vis = (color_segmap * 255).astype(np.uint8)
-    imageio.imwrite(filepath, vis)
+    imageio.imwrite(filepath, vis, compression=3)
 
     # save numpy data
     segmap = _color2segmap(color_segmap, index_color_map)
@@ -410,7 +448,7 @@ def render_class_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False):
     color_segmap = imageio.imread(temp_output)
     os.remove(temp_output)
     vis = (color_segmap * 255).astype(np.uint8)
-    imageio.imwrite(filepath, vis)
+    imageio.imwrite(filepath, vis, compression=3)
 
     # save numpy data
     segmap = _color2segmap(color_segmap, index_color_map)
@@ -478,8 +516,8 @@ def render_normal_map(filepath: str = '/tmp/temp.png', save_blend_file=False):
     temp_output = os.path.join(output_dir, 'image0001.exr')
     normal = imageio.imread(temp_output)
     os.remove(temp_output)
-    vis = ((normal/2 + 0.5) * 255).astype(np.uint8)
-    imageio.imwrite(filepath, vis)
+    vis = ((normal / 2 + 0.5) * 255).astype(np.uint8)
+    imageio.imwrite(filepath, vis, compression=3)
 
     # save numpy data
     np.savez_compressed(os.path.splitext(filepath)[0] + '.npz', data=normal)

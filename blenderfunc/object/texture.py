@@ -17,7 +17,12 @@ def get_hdr_material_infos(hdr_root: str = 'resources/hdr') -> dict:
 def set_hdr_background(filepath: str,
                        rot_x: float = 0.0, rot_y: float = 0.0, rot_z: float = 0.0,
                        scale_x: float = 1.0, scale_y: float = 1.0, scale_z: float = 1.0):
+    for world in bpy.data.worlds:
+        bpy.data.worlds.remove(world)
+    bpy.ops.world.new()
     world = bpy.data.worlds['World']
+    bpy.data.scenes['Scene'].world = world
+
     world.use_nodes = True
     tree = world.node_tree
     nodes = tree.nodes

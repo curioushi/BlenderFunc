@@ -29,7 +29,7 @@ blender --background --python examples/helloworld.py
 - [x] pose output
 - [x] hdr downloader
 - [x] hdr texture
-- [ ] camera distortion
+- [x] camera distortion
 - [x] projector distortion
 - [ ] ABC dataset download
 - [ ] ABC dataset process

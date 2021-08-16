@@ -282,17 +282,15 @@ def _new_distortion_node_group(name: str = "DistortionNodeGroup", k1: float = 0.
 
 
 def set_projector(opencv_matrix: List[List[float]] = None,
-                  distortion: List[float] = None,
+                  distort_coeffs: List[float] = None,
                   image_path: str = None,
                   pose: List[List[float]] = None,
                   energy: float = 100.0,
-                  flip_x: bool = False,
-                  flip_y: bool = False,
                   max_bounces: int = 0) -> str:
     if opencv_matrix is None:
         opencv_matrix = [[512, 0, 256], [0, 512, 256], [0, 0, 1]]
-    if distortion is None:
-        distortion = [0.0, 0.0, 0.0, 0.0, 0.0]
+    if distort_coeffs is None:
+        distort_coeffs = [0.0, 0.0, 0.0, 0.0, 0.0]  # k1, k2, p1, p2, k3
     if image_path is None:
         image_path = 'resources/images/test.png'
     if pose is None:
@@ -336,7 +334,7 @@ def set_projector(opencv_matrix: List[List[float]] = None,
     node_divide.operation = 'DIVIDE'
     node_divide.location = (0, 0)
 
-    k1, k2, k3, p1, p2 = distortion
+    k1, k2, p1, p2, k3 = distort_coeffs
     distortion_node_group = _new_distortion_node_group(name='ProjectorDistortion', k1=k1, k2=k2, k3=k3, p1=p1, p2=p2)
     node_distortion = node_tree.nodes.new('ShaderNodeGroup')
     node_distortion.node_tree = distortion_node_group
@@ -346,10 +344,6 @@ def set_projector(opencv_matrix: List[List[float]] = None,
     node_mapping.location = (400, 0)
     node_mapping.label = 'Mapping - Intrinsics'
 
-    node_mapping2 = node_tree.nodes.new('ShaderNodeMapping')
-    node_mapping2.location = (600, 0)
-    node_mapping2.label = 'Mapping - Flip'
-
     node_teximg = node_tree.nodes.new('ShaderNodeTexImage')
     bpy.ops.image.open(filepath=os.path.abspath(image_path), relative_path=False)
     image_texture = bpy.data.images[os.path.basename(image_path)]
@@ -357,13 +351,13 @@ def set_projector(opencv_matrix: List[List[float]] = None,
     node_teximg.extension = 'CLIP'
     node_teximg.image_user.use_cyclic = True
     node_teximg.image_user.use_auto_refresh = True
-    node_teximg.location = (800, 0)
+    node_teximg.location = (600, 0)
 
     node_emission = node_tree.nodes.new('ShaderNodeEmission')
-    node_emission.location = (1100, 0)
+    node_emission.location = (900, 0)
 
     node_output = node_tree.nodes.new('ShaderNodeOutputLight')
-    node_output.location = (1300, -200)
+    node_output.location = (1100, -200)
 
     node_tree.links.new(node_texcoord.outputs[1], node_separate.inputs[0])
     node_tree.links.new(node_texcoord.outputs[1], node_divide.inputs[0])
@@ -371,8 +365,7 @@ def set_projector(opencv_matrix: List[List[float]] = None,
     node_tree.links.new(node_abs.outputs[0], node_divide.inputs[1])
     node_tree.links.new(node_divide.outputs[0], node_distortion.inputs[0])
     node_tree.links.new(node_distortion.outputs[0], node_mapping.inputs[0])
-    node_tree.links.new(node_mapping.outputs[0], node_mapping2.inputs[0])
-    node_tree.links.new(node_mapping2.outputs[0], node_teximg.inputs[0])
+    node_tree.links.new(node_mapping.outputs[0], node_teximg.inputs[0])
     node_tree.links.new(node_teximg.outputs[0], node_emission.inputs[0])
     node_tree.links.new(node_emission.outputs[0], node_output.inputs[0])
 
@@ -390,13 +383,6 @@ def set_projector(opencv_matrix: List[List[float]] = None,
     node_mapping.inputs[3].default_value[0] = fx / width
     node_mapping.inputs[3].default_value[1] = fy / height
 
-    # flip
-    if flip_x:
-        node_mapping2.inputs['Location'].default_value[0] = 1.0
-        node_mapping2.inputs['Scale'].default_value[0] = -1.0
-    if flip_y:
-        node_mapping2.inputs['Location'].default_value[1] = 1.0
-        node_mapping2.inputs['Scale'].default_value[1] = -1.0
     return projector.name
 
 

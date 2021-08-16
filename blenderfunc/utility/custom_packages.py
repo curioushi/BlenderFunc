@@ -20,6 +20,9 @@ def setup_custom_packages(required_packages: List = None, reinstall_packages: bo
     if required_packages is None:
         return
 
+    # upgrade pip
+    subprocess.Popen([python_bin, '-m', 'pip', 'install', '--upgrade', 'pip', 'setuptools', 'wheel'])
+
     for package in required_packages:
         if "==" in package:
             package_name, package_version = package.lower().split('==')

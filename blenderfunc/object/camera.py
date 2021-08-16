@@ -1,5 +1,6 @@
 from typing import List
 
+import cv2
 import bpy
 import numpy as np
 from mathutils import Matrix
@@ -8,6 +9,7 @@ from blenderfunc.utility.initialize import remove_all_cameras
 
 def set_camera(opencv_matrix: List[List[float]] = None,
                image_resolution: List[int] = None,
+               distort_coeffs: List[float] = None,
                pose: List[List[float]] = None,
                clip_start: float = 0.1,
                clip_end: float = 100,
@@ -16,6 +18,8 @@ def set_camera(opencv_matrix: List[List[float]] = None,
         opencv_matrix = [[400, 0, 400], [0, 400, 300], [0, 0, 1]]
     if image_resolution is None:
         image_resolution = [800, 600]
+    if distort_coeffs is None:
+        distort_coeffs = [0.0, 0.0, 0.0, 0.0, 0.0]  # k1, k2, p1, p2, k3
     if pose is None:
         pose = [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 1], [0, 0, 0, 1]]
 
@@ -70,6 +74,8 @@ def set_camera(opencv_matrix: List[List[float]] = None,
     blender_pose = np.array(pose).dot(Q)
     cam_ob.matrix_world = Matrix(blender_pose)
 
+    cam_ob['CameraMatrix'] = opencv_matrix
+    cam_ob['DistortCoeffs'] = distort_coeffs
     return cam_ob.name
 
 
