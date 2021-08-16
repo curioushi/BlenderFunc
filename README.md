@@ -7,7 +7,8 @@ The differences between this project and BlenderProc are:
 - Instead of writing config in BlenderProc, you can directly write python script to control the data generation process, 
   which gives you more flexibility
 
-- Simple but powerful functions, e.g., `clean_data()`, `set_camera()`, `add_object()` to help you write scripts
+- Simple but powerful functions, e.g., `set_camera()`, `set_projector()`, `add_ply()`, 
+  `physics_simulation()`, `render_color()`
 
 ## How to run
 
@@ -33,7 +34,7 @@ blender --background --python examples/helloworld.py
 - [x] projector distortion
 - [ ] ABC dataset download
 - [ ] ABC dataset process
-- [ ] calibration pipeline
+- [x] calibration pipeline
 - [ ] upgrade collision checking
 - [ ] special format convert: coco, xyz-log
 - [ ] documentation
