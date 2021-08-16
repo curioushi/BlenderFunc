@@ -28,9 +28,11 @@ blender --background --python examples/helloworld.py
 - [x] normal
 - [x] pose output
 - [x] hdr downloader
-- [ ] hdr texture
+- [x] hdr texture
 - [ ] camera distortion
 - [x] projector distortion
+- [ ] ABC dataset download
+- [ ] ABC dataset process
 - [ ] calibration pipeline
 - [ ] upgrade collision checking
 - [ ] special format convert: coco, xyz-log

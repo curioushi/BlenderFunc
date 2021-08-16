@@ -36,7 +36,7 @@ proj_patterns = sorted(glob('resources/images/sl_patterns/*.bmp'))
 bf.initialize()
 bf.set_background_light(strength=1)
 bf.set_camera(opencv_matrix=cam_K, image_resolution=image_resolution, pose=cam2world)
-bf.add_plane(size=100, properties=dict(physics=False, collision_shape='CONVEX_HULL', class_id=1))
+bf.add_plane(size=3, properties=dict(physics=False, collision_shape='CONVEX_HULL', class_id=1))
 tote = bf.add_tote(length=0.7, width=0.9, height=0.7,
                    properties=dict(physics=False, collision_shape='MESH', class_id=2))
 obj = bf.add_ply(filepath='resources/models/brake_disk.ply',
@@ -49,8 +49,11 @@ for _ in range(num - 1):
 mat = bf.add_simple_material(color=[1, 0, 0], metallic=1, roughness=0.3)
 bf.set_material(obj, mat)
 
+hdr_files = list(bf.get_hdr_material_infos().values())
+
 bf.physics_simulation()
 for i, pattern_path in enumerate(proj_patterns):
+    bf.set_hdr_background(random.choice(hdr_files))
     proj = bf.set_projector(opencv_matrix=proj_K, image_path=pattern_path, pose=proj2world, flip_x=True)
     bf.render_color('output/deep_tote_once_sl/{:04}.png'.format(i), samples=10, color_mode='RGB', save_blend_file=True)
 bf.render_shadow_mask('output/deep_tote_once_sl/shadow_mask.png', proj, save_blend_file=True)

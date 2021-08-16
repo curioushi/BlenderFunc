@@ -6,6 +6,48 @@ from typing import List
 from blenderfunc.utility.utility import get_material_by_name, get_object_by_name
 
 
+def get_hdr_material_infos(hdr_root: str = 'resources/hdr') -> dict:
+    if not os.path.exists(hdr_root):
+        raise Exception('Please run python3 scripts/download_hdr.py first to download hdr textures')
+    hdr_files = list(glob(hdr_root + '/*.hdr'))
+    hdr_names = [os.path.basename(f) for f in hdr_files]
+    return dict(zip(hdr_names, hdr_files))
+
+
+def set_hdr_background(filepath: str,
+                       rot_x: float = 0.0, rot_y: float = 0.0, rot_z: float = 0.0,
+                       scale_x: float = 1.0, scale_y: float = 1.0, scale_z: float = 1.0):
+    world = bpy.data.worlds['World']
+    world.use_nodes = True
+    tree = world.node_tree
+    nodes = tree.nodes
+    links = tree.links
+
+    for node in nodes:
+        nodes.remove(node)
+
+    n_coord = nodes.new('ShaderNodeTexCoord')
+    n_coord.location = (0, 0)
+    n_mapping = nodes.new('ShaderNodeMapping')
+    n_mapping.location = (200, 0)
+    n_mapping.inputs['Rotation'].default_value[0] = rot_x / 180 * math.pi
+    n_mapping.inputs['Rotation'].default_value[1] = rot_y / 180 * math.pi
+    n_mapping.inputs['Rotation'].default_value[2] = rot_z / 180 * math.pi
+    n_mapping.inputs['Scale'].default_value[0] = scale_x
+    n_mapping.inputs['Scale'].default_value[1] = scale_y
+    n_mapping.inputs['Scale'].default_value[2] = scale_z
+    n_tex = nodes.new('ShaderNodeTexEnvironment')
+    n_tex.location = (400, 0)
+    n_output = nodes.new('ShaderNodeOutputWorld')
+    n_output.location = (700, 0)
+
+    links.new(n_coord.outputs[0], n_mapping.inputs[0])
+    links.new(n_mapping.outputs[0], n_tex.inputs[0])
+    links.new(n_tex.outputs[0], n_output.inputs[0])
+    image = load_image(filepath)
+    n_tex.image = image
+
+
 def get_pbr_material_infos(texture_root: str = 'resources/cctextures') -> dict:
     if not os.path.exists(texture_root):
         raise Exception('Please run python3 scripts/download_textures.py first to download textures')
@@ -198,4 +240,4 @@ def make_smart_uv_project(obj_name: str):
 
 
 __all__ = ['get_pbr_material_infos', 'add_pbr_material', 'add_simple_material', 'load_image', 'set_material',
-           'make_smart_uv_project']
+           'make_smart_uv_project', 'get_hdr_material_infos', 'set_hdr_background']
