@@ -133,6 +133,7 @@ def parse_arguments():
     parser.add_argument('--camera_type', type=str, default='XYZ-SL',
                         help='different cameras have different fov and aspect ratio')
     parser.add_argument('--height', type=float, default=2, help='camera height')
+    parser.add_argument('--proj_x', type=float, default=0.1, help='projector x offset')
     parser.add_argument('--tote_length', type=float, default=1)
     parser.add_argument('--tote_width', type=float, default=1)
     parser.add_argument('--tote_height', type=float, default=0.5)
@@ -141,6 +142,8 @@ def parse_arguments():
     parser.add_argument('--object_path', type=str, default='', help='CAD model, supported format: ply')
     parser.add_argument('--max_bounces', type=int, default=3, help='render option: max bounces of light')
     parser.add_argument('--samples', type=int, default=10, help='render option: samples for each pixel')
+    parser.add_argument('--substeps_per_frame', type=int, default=10,
+                        help='physics option: steps per frame, higher value for higher simulation stability')
     args = parser.parse_args(args=argv)
     return args
 
@@ -154,6 +157,7 @@ bf.initialize_folder(output_dir)
 bf.initialize()
 bf.set_background_light(strength=1)
 bf.set_camera(opencv_matrix=camera['intrinsics'], image_resolution=camera['image_resolution'], pose=cam_pose)
+light_name = bf.add_light([args.proj_x, 0, args.height])
 bf.add_plane(size=100, properties=dict(physics=False, collision_shape='CONVEX_HULL'))
 tote = bf.add_tote(length=args.tote_length, width=args.tote_width, height=args.tote_height,
                    properties=dict(physics=False, collision_shape='MESH'))
@@ -165,14 +169,16 @@ for _ in range(args.num - 1):
     obj = bf.duplicate_mesh_object(obj)
     bf.collision_avoidance_positioning(obj, pose_sampler)
 
-dump_camera_json(output_dir + '/camera.json', 'Blender', args.camera_type, camera['intrinsics'],
+camera_id = camera_name = 'BlenderCamera'
+dump_camera_json(output_dir + '/camera.json', camera_id, camera_name, camera['intrinsics'],
                  camera['image_resolution'], camera['distort_coeffs'], camera['depth_scale'])
-dump_env_yml(output_dir + '/env.yml', args.tote_length, args.tote_width, args.tote_height, args.camera_type, cam_pose)
+dump_env_yml(output_dir + '/env.yml', args.tote_length, args.tote_width, args.tote_height, camera_id, cam_pose)
 for i in range(args.num):
     bf.remove_highest_object()
-    bf.physics_simulation()
+    bf.physics_simulation(substeps_per_frame=args.substeps_per_frame)
     timestamp = int(time.time())
     bf.render_color(output_dir + '/{}_{}_rgb.png'.format(timestamp, args.camera_type), denoiser='OPTIX',
                     samples=args.samples, max_bounces=args.max_bounces)
     bf.render_depth(output_dir + '/{}_{}_aligned_depth.png'.format(timestamp, args.camera_type),
                     depth_scale=camera['depth_scale'], save_npz=False)
+    bf.render_shadow_mask(output_dir + '/{}_{}_shadow_mask.png'.format(timestamp, args.camera_type), light_name, True)

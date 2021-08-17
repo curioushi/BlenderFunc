@@ -161,7 +161,8 @@ def _bake_physics_simulation(min_simulation_time: float, max_simulation_time: fl
             bpy.ops.ptcache.free_bake({"point_cache": point_cache})
 
 
-def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: float = 10.0):
+def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: float = 10.0,
+                       substeps_per_frame: int = 10):
     # enable rigid body
     for obj in get_all_mesh_objects():
         physics_type = 'ACTIVE' if obj.get('physics', False) else 'PASSIVE'
@@ -171,7 +172,7 @@ def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: fl
 
     bpy.ops.ed.undo_push(message='before simulation')
     obj_poses_before_sim = _get_active_objects_pose()
-    origin_shifts = _simulation(min_simulation_time, max_simulation_time)
+    origin_shifts = _simulation(min_simulation_time, max_simulation_time, substeps_per_frame=substeps_per_frame)
     obj_poses_after_sim = _get_active_objects_pose()
     bpy.ops.ptcache.free_bake({"point_cache": bpy.context.scene.rigidbody_world.point_cache})
     bpy.ops.ed.undo_push(message='after simulation')
