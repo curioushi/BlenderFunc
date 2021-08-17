@@ -35,9 +35,11 @@ blender --background --python examples/helloworld.py
 - [ ] ABC dataset download
 - [ ] ABC dataset process
 - [x] calibration pipeline
+- [x] support stl model
 - [ ] upgrade collision checking
 - [ ] special format convert: coco, xyz-log
 - [ ] documentation
 
 ### bugs
 - [x] physics simulation origin wrong
+- [x] fail to enable GPU

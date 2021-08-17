@@ -1,6 +1,7 @@
 import os
 import bpy
 import time
+from glob import glob
 
 BLENDER_FUNC_STACK_DEPTH = 0
 
@@ -57,4 +58,12 @@ def get_material_by_name(name: str) -> bpy.types.Material:
         raise Exception('Material "{}" does not exist'.format(name))
 
 
-__all__ = ['save_blend', 'get_material_by_name', 'get_object_by_name']
+def initialize_folder(directory: str):
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+    for file in glob(directory + '/*'):
+        if not os.path.isdir(file):
+            os.remove(file)
+
+
+__all__ = ['save_blend', 'get_material_by_name', 'get_object_by_name', 'initialize_folder']

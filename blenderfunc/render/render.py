@@ -47,6 +47,7 @@ def _distort_image(image: np.ndarray):
 
 def _initialize_renderer(samples: int = 32, denoiser: str = None, max_bounces: int = 3, auto_tile_size: bool = True,
                          num_threads: int = 1, simplify_subdivision_render: int = 3):
+    bpy.context.preferences.addons['cycles'].preferences.compute_device_type = 'CUDA'
     scene = bpy.data.scenes['Scene']
     scene.render.engine = 'CYCLES'
     scene.cycles.device = 'GPU'
@@ -212,7 +213,7 @@ def render_shadow_mask(filepath: str = '/tmp/temp.png', light_name: str = '', sa
     bpy.ops.ed.undo()
 
 
-def render_depth(filepath: str = '/tmp/temp.png', depth_scale=0.00005, save_blend_file=False):
+def render_depth(filepath: str = '/tmp/temp.png', depth_scale=0.00005, save_blend_file=False, save_npz=True):
     if os.path.splitext(filepath)[-1] not in ['.png']:
         raise Exception('Unsupported image format: {}'.format(os.path.splitext(filepath)))
 
@@ -248,7 +249,8 @@ def render_depth(filepath: str = '/tmp/temp.png', depth_scale=0.00005, save_blen
     depth = depth[:, :, 0]
     depth[depth > 10] = float('nan')
     depth, _ = _distort_image(depth)
-    np.savez_compressed(os.path.splitext(filepath)[0] + '.npz', data=depth)
+    if save_npz:
+        np.savez_compressed(os.path.splitext(filepath)[0] + '.npz', data=depth)
     depth = depth / depth_scale
     depth = depth.astype(np.uint16)
     imageio.imwrite(filepath, depth, compression=3)
@@ -301,7 +303,7 @@ def _color2segmap(color: np.ndarray, index_color_map: dict):
     return segmap
 
 
-def render_instance_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False):
+def render_instance_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False, save_npz=True):
     if os.path.splitext(filepath)[-1] not in ['.png']:
         raise Exception('Unsupported image format: {}'.format(os.path.splitext(filepath)))
 
@@ -371,7 +373,8 @@ def render_instance_segmap(filepath: str = '/tmp/temp.png', save_blend_file=Fals
 
     # save numpy data
     segmap = _color2segmap(color_segmap, index_color_map)
-    np.savez_compressed(os.path.splitext(filepath)[0] + '.npz', data=segmap)
+    if save_npz:
+        np.savez_compressed(os.path.splitext(filepath)[0] + '.npz', data=segmap)
     print('image saved: {}'.format(filepath))
 
     if save_blend_file:
@@ -381,7 +384,7 @@ def render_instance_segmap(filepath: str = '/tmp/temp.png', save_blend_file=Fals
     bpy.ops.ed.undo()
 
 
-def render_class_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False):
+def render_class_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False, save_npz=True):
     if os.path.splitext(filepath)[-1] not in ['.png']:
         raise Exception('Unsupported image format: {}'.format(os.path.splitext(filepath)))
 
@@ -456,7 +459,8 @@ def render_class_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False):
 
     # save numpy data
     segmap = _color2segmap(color_segmap, index_color_map)
-    np.savez_compressed(os.path.splitext(filepath)[0] + '.npz', data=segmap)
+    if save_npz:
+        np.savez_compressed(os.path.splitext(filepath)[0] + '.npz', data=segmap)
     print('image saved: {}'.format(filepath))
 
     if save_blend_file:
@@ -466,7 +470,7 @@ def render_class_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False):
     bpy.ops.ed.undo()
 
 
-def render_normal_map(filepath: str = '/tmp/temp.png', save_blend_file=False):
+def render_normal_map(filepath: str = '/tmp/temp.png', save_blend_file=False, save_npz=True):
     if os.path.splitext(filepath)[-1] not in ['.png']:
         raise Exception('Unsupported image format: {}'.format(os.path.splitext(filepath)))
 
@@ -525,7 +529,8 @@ def render_normal_map(filepath: str = '/tmp/temp.png', save_blend_file=False):
     imageio.imwrite(filepath, vis, compression=3)
 
     # save numpy data
-    np.savez_compressed(os.path.splitext(filepath)[0] + '.npz', data=normal)
+    if save_npz:
+        np.savez_compressed(os.path.splitext(filepath)[0] + '.npz', data=normal)
     print('image saved: {}'.format(filepath))
 
     if save_blend_file:

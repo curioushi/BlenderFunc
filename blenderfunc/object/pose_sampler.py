@@ -77,8 +77,9 @@ def in_tote_sampler(tote_name: str, obj_name: str, num: int) -> Callable:
     for vertex in obj.data.vertices:
         pts.append(vertex.co)
     pts = np.array(pts)
+    center = np.mean(pts, axis=0)
 
-    max_dist = np.max(np.linalg.norm(pts, axis=-1))
+    max_dist = np.max(np.linalg.norm(pts - center, axis=-1))
     x_min = - length / 2 + max_dist
     x_max = length / 2 - max_dist
     y_min = -width / 2 + max_dist

@@ -21,7 +21,7 @@ def setup_custom_packages(required_packages: List = None, reinstall_packages: bo
         return
 
     # upgrade pip
-    subprocess.Popen([python_bin, '-m', 'pip', 'install', '--upgrade', 'pip', 'setuptools', 'wheel'])
+    subprocess.Popen([python_bin, '-m', 'pip', 'install', '--upgrade', 'pip', 'setuptools', 'wheel']).wait()
 
     for package in required_packages:
         if "==" in package:

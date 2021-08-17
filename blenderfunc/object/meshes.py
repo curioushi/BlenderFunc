@@ -127,6 +127,18 @@ def add_ply(filepath: str = None, name: str = 'PlyModel', properties: dict = Non
     return obj.name
 
 
+def add_stl(filepath: str = None, name: str = 'STLModel', properties: dict = None) -> str:
+    bpy.ops.import_mesh.stl(filepath=filepath)
+    obj = bpy.context.active_object
+    obj.name = name
+    obj.data.name = name
+    make_smart_uv_project(obj.name)
+    if properties is not None:
+        for key, value in properties.items():
+            obj[key] = value
+    return obj.name
+
+
 def add_obj(filepath: str = None, name: str = 'OBJModel', properties: dict = None) -> str:
     bpy.ops.import_scene.obj(filepath=filepath)
     objs = bpy.context.selected_objects
@@ -139,6 +151,33 @@ def add_obj(filepath: str = None, name: str = 'OBJModel', properties: dict = Non
         for key, value in properties.items():
             obj[key] = value
     return obj.name
+
+
+def add_object_from_file(filepath: str = None, name: str = "Model", properties: dict = None,
+                         max_vertices=float('inf')) -> str:
+    ext = os.path.splitext(filepath)[-1]
+    if ext == '.ply':
+        obj_name = add_ply(filepath, name=name, properties=properties)
+    elif ext == '.stl':
+        obj_name = add_stl(filepath, name=name, properties=properties)
+    elif ext == '.obj':
+        obj_name = add_obj(filepath, name=name, properties=properties)
+    else:
+        raise Exception('Unsupported CAD file format: {}'.format(ext))
+
+    obj = get_object_by_name(obj_name)
+    num_vertices_before = len(obj.data.vertices)
+    if num_vertices_before > max_vertices:
+        ratio = max_vertices / num_vertices_before
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.decimate(ratio=ratio)
+        bpy.ops.object.editmode_toggle()
+        num_vertices_after = len(obj.data.vertices)
+        print('Decimate object: {} -> {}'.format(num_vertices_before, num_vertices_after))
+
+    return obj_name
 
 
 def duplicate_mesh_object(obj_name: str) -> str:
@@ -167,5 +206,5 @@ def write_meshes_info(filepath: str = '/tmp/temp.csv'):
             f.write('{}, {}, {}, {}\n'.format(instance_id, class_id, name, pose))
 
 
-__all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_tote', 'add_ply', 'add_obj', 'remove_mesh_object',
-           'duplicate_mesh_object', 'write_meshes_info']
+__all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_tote', 'add_ply', 'add_obj', 'add_stl', 'add_object_from_file',
+           'remove_mesh_object', 'duplicate_mesh_object', 'write_meshes_info']
