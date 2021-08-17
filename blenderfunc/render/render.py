@@ -138,7 +138,18 @@ def render_color(filepath: str = '/tmp/temp.png', save_blend_file: bool = False,
     bpy.ops.ed.undo()
 
 
-def render_shadow_mask(filepath: str = '/tmp/temp.png', light_name: str = '', save_blend_file: bool = False):
+def apply_nan_mask(filepath: str, maskpath: str, outputpath: str = None):
+    image = imageio.imread(filepath)
+    mask = imageio.imread(maskpath) < 127
+    image[mask] = 0
+    if outputpath is None:
+        imageio.imwrite(filepath, image)
+    else:
+        imageio.imwrite(outputpath, image)
+
+
+def render_nan_mask(filepath: str = '/tmp/temp.png', light_name: str = '', threshold: float = 0.0,
+                    save_blend_file: bool = False):
     if os.path.splitext(filepath)[-1] not in ['.png']:
         raise Exception('Unsupported image format: {}'.format(os.path.splitext(filepath)))
     light = get_object_by_name(light_name)
@@ -148,7 +159,6 @@ def render_shadow_mask(filepath: str = '/tmp/temp.png', light_name: str = '', sa
     _initialize_renderer(samples=10, denoiser=None, max_bounces=0, auto_tile_size=True, num_threads=1)
 
     # hide all other light sources
-
     world = bpy.data.worlds.get('World', None)
     if world:
         world.cycles_visibility.camera = False
@@ -164,13 +174,22 @@ def render_shadow_mask(filepath: str = '/tmp/temp.png', light_name: str = '', sa
             obj.hide_render = True
 
     # increase light power
-    light.data.energy = 10000000
+    light.data.energy = 100
     light.data.shadow_soft_size = 0
     light.data.cycles.max_bounces = 0
     light.data.cycles.cast_shadow = True
     if light.data.use_nodes:
         tree = light.data.node_tree
         tree.nodes['Image Texture'].image = load_image('resources/images/white.png')
+
+    # maximize roughness
+    remove_all_materials()
+    for mesh in bpy.data.meshes:
+        mat = bpy.data.materials.new("Material")
+        mat.use_nodes = True
+        mat.node_tree.nodes['Principled BSDF'].inputs['Roughness'].default_value = 1.0
+        mesh.materials.clear()
+        mesh.materials.append(mat)
 
     # make output folder
     output_dir = os.path.abspath(os.path.dirname(filepath))
@@ -183,13 +202,31 @@ def render_shadow_mask(filepath: str = '/tmp/temp.png', light_name: str = '', sa
     node_tree = scene.node_tree
     for node in node_tree.nodes:
         node_tree.nodes.remove(node)
-    render_layers_node = node_tree.nodes.new('CompositorNodeRLayers')
-    file_output_node = node_tree.nodes.new('CompositorNodeOutputFile')
-    file_output_node.base_path = output_dir
-    file_output_node.file_slots['Image'].path = 'image'
-    file_output_node.format.color_mode = 'BW'
-    file_output_node.format.color_depth = '8'
-    node_tree.links.new(render_layers_node.outputs[0], file_output_node.inputs[0])
+    n_render_layer = node_tree.nodes.new('CompositorNodeRLayers')
+    n_render_layer.location = (0, 0)
+
+    n_rgb2bw = node_tree.nodes.new('CompositorNodeRGBToBW')
+    n_rgb2bw.location = (300, 0)
+
+    n_normalize = node_tree.nodes.new('CompositorNodeNormalize')
+    n_normalize.location = (500, 0)
+
+    n_threshold = node_tree.nodes.new('CompositorNodeMath')
+    n_threshold.operation = 'GREATER_THAN'
+    n_threshold.inputs[1].default_value = threshold
+    n_threshold.location = (700, 0)
+
+    n_file_output = node_tree.nodes.new('CompositorNodeOutputFile')
+    n_file_output.location = (900, 0)
+    n_file_output.base_path = output_dir
+    n_file_output.file_slots['Image'].path = 'image'
+    n_file_output.format.color_mode = 'BW'
+    n_file_output.format.color_depth = '8'
+
+    node_tree.links.new(n_render_layer.outputs[0], n_rgb2bw.inputs[0])
+    node_tree.links.new(n_rgb2bw.outputs[0], n_normalize.inputs[0])
+    node_tree.links.new(n_normalize.outputs[0], n_threshold.inputs[0])
+    node_tree.links.new(n_threshold.outputs[0], n_file_output.inputs[0])
 
     # render
     bpy.context.scene.frame_current = 1
@@ -197,13 +234,7 @@ def render_shadow_mask(filepath: str = '/tmp/temp.png', light_name: str = '', sa
 
     # postprocess
     temp_output = os.path.join(output_dir, 'image0001.png')
-    mask = imageio.imread(temp_output)
-    if mask.ndim == 3:
-        mask = mask[:, :, 0]
-    mask = np.array((mask > 122) * 255).astype(np.uint8)
-    mask, _ = _distort_image(mask)
-    imageio.imwrite(filepath, mask, compression=3)
-    os.remove(temp_output)
+    os.rename(temp_output, filepath)
     print('image saved: {}'.format(filepath))
 
     if save_blend_file:
@@ -540,5 +571,5 @@ def render_normal_map(filepath: str = '/tmp/temp.png', save_blend_file=False, sa
     bpy.ops.ed.undo()
 
 
-__all__ = ['render_color', 'render_depth', 'render_shadow_mask', 'render_instance_segmap', 'render_class_segmap',
-           'render_normal_map']
+__all__ = ['render_color', 'render_depth', 'render_nan_mask', 'render_instance_segmap', 'render_class_segmap',
+           'render_normal_map', 'apply_nan_mask']

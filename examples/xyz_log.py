@@ -3,13 +3,14 @@ import sys
 sys.path.append('.')
 from blenderfunc.utility.custom_packages import setup_custom_packages
 
-setup_custom_packages(["numpy", "Pillow", "xmltodict", "pyyaml"])
+setup_custom_packages(["numpy", "Pillow", "xmltodict", "pyyaml", "opencv-python", "imageio"])
 
 import argparse
 import os
 import sys
 import json
 import yaml
+import numpy as np
 import blenderfunc.all as bf
 import time
 
@@ -144,6 +145,8 @@ def parse_arguments():
     parser.add_argument('--samples', type=int, default=10, help='render option: samples for each pixel')
     parser.add_argument('--substeps_per_frame', type=int, default=10,
                         help='physics option: steps per frame, higher value for higher simulation stability')
+    parser.add_argument('--nan_threshold', type=float, default=0.2,
+                        help='this threshold control the area of nan points, reasonable range [0, 0.4]')
     args = parser.parse_args(args=argv)
     return args
 
@@ -169,16 +172,15 @@ for _ in range(args.num - 1):
     obj = bf.duplicate_mesh_object(obj)
     bf.collision_avoidance_positioning(obj, pose_sampler)
 
-camera_id = camera_name = 'BlenderCamera'
-dump_camera_json(output_dir + '/camera.json', camera_id, camera_name, camera['intrinsics'],
+dump_camera_json(output_dir + '/camera.json', 'BlenderCamera', 'BlenderCamera', camera['intrinsics'],
                  camera['image_resolution'], camera['distort_coeffs'], camera['depth_scale'])
-dump_env_yml(output_dir + '/env.yml', args.tote_length, args.tote_width, args.tote_height, camera_id, cam_pose)
+dump_env_yml(output_dir + '/env.yml', args.tote_length, args.tote_width, args.tote_height, 'BlenderCamera', cam_pose)
 for i in range(args.num):
     bf.remove_highest_object()
     bf.physics_simulation(substeps_per_frame=args.substeps_per_frame)
     timestamp = int(time.time())
-    bf.render_color(output_dir + '/{}_{}_rgb.png'.format(timestamp, args.camera_type), denoiser='OPTIX',
-                    samples=args.samples, max_bounces=args.max_bounces)
-    bf.render_depth(output_dir + '/{}_{}_aligned_depth.png'.format(timestamp, args.camera_type),
-                    depth_scale=camera['depth_scale'], save_npz=False)
-    bf.render_shadow_mask(output_dir + '/{}_{}_shadow_mask.png'.format(timestamp, args.camera_type), light_name, True)
+    prefix = '{}/{}_{}_'.format(output_dir, timestamp, args.camera_type)
+    bf.render_color(prefix + 'rgb.png', denoiser='OPTIX', samples=args.samples, max_bounces=args.max_bounces)
+    bf.render_depth(prefix + 'aligned_depth.png', depth_scale=camera['depth_scale'], save_npz=False)
+    bf.render_nan_mask(prefix + 'nan_mask.png', light_name, threshold=args.nan_threshold)
+    bf.apply_nan_mask(prefix + 'aligned_depth.png', prefix + 'nan_mask.png', prefix + 'masked_depth.png')
