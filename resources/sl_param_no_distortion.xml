@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<ImageSize>
+  2048 1536</ImageSize>
+<CameraIntrinsics type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    2.4126578224264249e+03 0. 1.0436806276251482e+03 0.
+    2.4131825993289995e+03 7.9807581967263309e+02 0. 0. 1.</data></CameraIntrinsics>
+<CameraDistCoeffs type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    0. 0. 0. 0. 0.
+  </data></CameraDistCoeffs>
+<ProjectorIntrinsics type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    1.1230316259419035e+03 0. 4.7859729784852516e+02 0.
+    2.2463308703746666e+03 5.4463425885350546e+02 0. 0. 1.</data></ProjectorIntrinsics>
+<ProjectorDistCoeffs type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    0. 0. 0. 0. 0.
+  </data></ProjectorDistCoeffs>
+<Rotation type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    -9.8959778159412981e-01 7.2678971001615984e-03
+    1.4367814146806895e-01 -7.5819718397840581e-03
+    -9.9996991397295454e-01 -1.6385517820670615e-03
+    1.4366190993787359e-01 -2.7108708311640809e-03
+    9.8962311351965693e-01</data></Rotation>
+<RotationVec type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    -1.2933437599669128e+01 1.9577147594768621e-01
+    -1.7910700500917326e+02</data></RotationVec>
+<Translation type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    -2.5943688038242453e+02 -4.1733641748669825e+00
+    4.1083197231722671e+01</data></Translation>
+</opencv_storage>

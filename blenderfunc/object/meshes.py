@@ -38,6 +38,18 @@ def add_cube(size: float = 2.0, name: str = 'Cube', properties: dict = None) -> 
     return obj.name
 
 
+def add_ball(radius: float = 1.0, subdivisions=4, name: str = 'Ball', properties: dict = None) -> str:
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=subdivisions, radius=radius)
+    obj = bpy.context.active_object
+    obj.name = name
+    obj.data.name = name
+
+    if properties is not None:
+        for key, value in properties.items():
+            obj[key] = value
+    return obj.name
+
+
 def add_cylinder(radius: float = 0.1, depth: float = 0.3, vertices: int = 64, name: str = 'Cylinder',
                  properties: dict = None) -> str:
     bpy.ops.mesh.primitive_cylinder_add(vertices=vertices, radius=radius, depth=depth)
@@ -206,5 +218,5 @@ def write_meshes_info(filepath: str = '/tmp/temp.csv'):
             f.write('{}, {}, {}, {}\n'.format(instance_id, class_id, name, pose))
 
 
-__all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_tote', 'add_ply', 'add_obj', 'add_stl', 'add_object_from_file',
-           'remove_mesh_object', 'duplicate_mesh_object', 'write_meshes_info']
+__all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_ball', 'add_tote', 'add_ply', 'add_obj', 'add_stl',
+           'add_object_from_file', 'remove_mesh_object', 'duplicate_mesh_object', 'write_meshes_info']

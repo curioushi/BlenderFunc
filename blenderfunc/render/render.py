@@ -89,8 +89,8 @@ def _initialize_renderer(samples: int = 32, denoiser: str = None, max_bounces: i
 
 
 def render_color(filepath: str = '/tmp/temp.png', save_blend_file: bool = False,
-                 samples: int = 32, color_mode: str = 'RGB', color_depth: int = '8', auto_tile_size: bool = True,
-                 denoiser: str = None, num_threads: int = 1, max_bounces: int = 3):
+                 samples: int = 32, denoiser: str = None, max_bounces: int = 3, color_mode: str = 'RGB',
+                 color_depth: int = '8', auto_tile_size: bool = True, num_threads: int = 1):
     if os.path.splitext(filepath)[-1] not in ['.png']:
         raise Exception('unsupported image format: {}'.format(os.path.splitext(filepath)))
 
@@ -148,15 +148,15 @@ def apply_nan_mask(filepath: str, maskpath: str, outputpath: str = None):
         imageio.imwrite(outputpath, image)
 
 
-def render_nan_mask(filepath: str = '/tmp/temp.png', light_name: str = '', threshold: float = 0.0,
-                    save_blend_file: bool = False):
+def render_light_mask(filepath: str = '/tmp/temp.png', light_name: str = '', cast_shadow: bool = True,
+                      energy: float = 100, threshold: float = 0.0, save_blend_file: bool = False):
     if os.path.splitext(filepath)[-1] not in ['.png']:
         raise Exception('Unsupported image format: {}'.format(os.path.splitext(filepath)))
     light = get_object_by_name(light_name)
 
     bpy.ops.ed.undo_push(message='before render_shadow_mask()')
 
-    _initialize_renderer(samples=10, denoiser=None, max_bounces=0, auto_tile_size=True, num_threads=1)
+    _initialize_renderer(samples=32, denoiser=None, max_bounces=0, auto_tile_size=True, num_threads=1)
 
     # hide all other light sources
     world = bpy.data.worlds.get('World', None)
@@ -174,10 +174,10 @@ def render_nan_mask(filepath: str = '/tmp/temp.png', light_name: str = '', thres
             obj.hide_render = True
 
     # increase light power
-    light.data.energy = 100
+    light.data.energy = energy
     light.data.shadow_soft_size = 0
     light.data.cycles.max_bounces = 0
-    light.data.cycles.cast_shadow = True
+    light.data.cycles.cast_shadow = cast_shadow
     if light.data.use_nodes:
         tree = light.data.node_tree
         tree.nodes['Image Texture'].image = load_image('resources/images/white.png')
@@ -571,5 +571,5 @@ def render_normal_map(filepath: str = '/tmp/temp.png', save_blend_file=False, sa
     bpy.ops.ed.undo()
 
 
-__all__ = ['render_color', 'render_depth', 'render_nan_mask', 'render_instance_segmap', 'render_class_segmap',
+__all__ = ['render_color', 'render_depth', 'render_light_mask', 'render_instance_segmap', 'render_class_segmap',
            'render_normal_map', 'apply_nan_mask']

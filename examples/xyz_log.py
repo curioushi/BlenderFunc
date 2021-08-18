@@ -182,5 +182,5 @@ for i in range(args.num):
     prefix = '{}/{}_{}_'.format(output_dir, timestamp, args.camera_type)
     bf.render_color(prefix + 'rgb.png', denoiser='OPTIX', samples=args.samples, max_bounces=args.max_bounces)
     bf.render_depth(prefix + 'aligned_depth.png', depth_scale=camera['depth_scale'], save_npz=False)
-    bf.render_nan_mask(prefix + 'nan_mask.png', light_name, threshold=args.nan_threshold)
+    bf.render_light_mask(prefix + 'light_mask.png', light_name, threshold=args.nan_threshold)
     bf.apply_nan_mask(prefix + 'aligned_depth.png', prefix + 'nan_mask.png', prefix + 'masked_depth.png')
