@@ -1,7 +1,7 @@
 import sys
 sys.path.append('.')
 from blenderfunc.utility.custom_packages import setup_custom_packages
-setup_custom_packages(["numpy", "Pillow"])
+setup_custom_packages(["numpy", "Pillow", "opencv-python", "imageio"])
 
 import blenderfunc.all as bf
 
