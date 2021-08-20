@@ -1,4 +1,5 @@
-FROM nvidia/cudagl:11.4.1-base-ubuntu20.04
+# run nvidia-smi to check your CUDA version
+FROM nvidia/cudagl:11.2.1-base-ubuntu20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
