@@ -1,0 +1,13 @@
+#!/bin/bash
+
+script_dir="$(dirname $(realpath "$0"))"
+repo_dir="$script_dir/../"
+
+docker run --gpus=all -it --user 1000:1000\
+           -v /etc/passwd:/etc/passwd \  # use host user in container
+           -v /home/$USER:/home/$USER \
+           blenderfunc:latest \
+           /bin/bash -c "cp -r /var/tmp/OptixCache_root /var/tmp/OptixCache_$USER && \
+                         blender -b --python examples/xyz_log.py -- \
+                         --output_dir=$repo_dir/output/xyz_log \
+                         --object_path=$repo_dir/resources/models/brake_disk.ply"

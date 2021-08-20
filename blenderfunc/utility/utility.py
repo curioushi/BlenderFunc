@@ -59,8 +59,7 @@ def get_material_by_name(name: str) -> bpy.types.Material:
 
 
 def initialize_folder(directory: str):
-    if not os.path.exists(directory):
-        os.mkdir(directory)
+    os.makedirs(directory, exist_ok=True)
     for file in glob(directory + '/*'):
         if not os.path.isdir(file):
             os.remove(file)

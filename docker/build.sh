@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# change working directory to file path
+# change working directory to script directory
+cd "$(dirname "$0")"
 
 # download blender if doesn't exist
 if [ ! -e "blender-2.92.0-linux64.tar.xz" ]; then
@@ -12,4 +13,4 @@ if [ ! -e "blenderfunc.tar.xz" ]; then
   git ls-files .. -z | xargs -0 tar -czvf blenderfunc.tar.xz
 fi
 
-docker build -f Dockerfile-general -t blenderfunc:general .
+docker build -t blenderfunc:latest .

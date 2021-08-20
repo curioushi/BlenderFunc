@@ -47,7 +47,9 @@ def _distort_image(image: np.ndarray):
 
 def _initialize_renderer(samples: int = 32, denoiser: str = None, max_bounces: int = 3, auto_tile_size: bool = True,
                          num_threads: int = 1, simplify_subdivision_render: int = 3):
-    bpy.context.preferences.addons['cycles'].preferences.compute_device_type = 'CUDA'
+    cprefs = bpy.context.preferences.addons['cycles'].preferences
+    cprefs.get_devices()
+    cprefs.compute_device_type = 'CUDA'
     scene = bpy.data.scenes['Scene']
     scene.render.engine = 'CYCLES'
     scene.cycles.device = 'GPU'

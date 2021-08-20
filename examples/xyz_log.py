@@ -131,6 +131,7 @@ def parse_arguments():
     argv = sys.argv[sys.argv.index('--') + 1:]
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('--output_dir', type=str, default='output/xyz_log')
     parser.add_argument('--camera_type', type=str, default='XYZ-SL',
                         help='different cameras have different fov and aspect ratio')
     parser.add_argument('--height', type=float, default=2, help='camera height')
@@ -154,7 +155,7 @@ def parse_arguments():
 args = parse_arguments()
 camera = camera_infos[args.camera_type]
 cam_pose = [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, args.height], [0, 0, 0, 1]]
-output_dir = 'output/xyz_log'
+output_dir = args.output_dir
 
 bf.initialize_folder(output_dir)
 bf.initialize()
@@ -183,4 +184,4 @@ for i in range(args.num):
     bf.render_color(prefix + 'rgb.png', denoiser='OPTIX', samples=args.samples, max_bounces=args.max_bounces)
     bf.render_depth(prefix + 'aligned_depth.png', depth_scale=camera['depth_scale'], save_npz=False)
     bf.render_light_mask(prefix + 'light_mask.png', light_name, threshold=args.nan_threshold)
-    bf.apply_nan_mask(prefix + 'aligned_depth.png', prefix + 'nan_mask.png', prefix + 'masked_depth.png')
+    bf.apply_nan_mask(prefix + 'aligned_depth.png', prefix + 'light_mask.png', prefix + 'masked_depth.png')
