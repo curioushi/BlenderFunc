@@ -10,18 +10,20 @@ The differences between this project and BlenderProc are:
 - Simple but powerful functions, e.g., `set_camera()`, `set_projector()`, `add_ply()`, 
   `physics_simulation()`, `render_color()`
 
-## Download Blender
-
-```shell
-mkdir ~/blender && cd ~/blender
-wget https://download.blender.org/release/Blender2.92/blender-2.92.0-linux64.tar.xz
-tar xvf blender-2.92.0-linux64.tar.xz
-```
-
 ## How to run
 
 ```shell
-blender --background --python examples/helloworld.py
+cd BlenderFunc
+
+## install Blender 2.92
+wget https://download.blender.org/release/Blender2.92/blender-2.92.0-linux64.tar.xz
+# or use Tsinghua source
+# wget https://mirrors.tuna.tsinghua.edu.cn/blender/blender-release/Blender2.92/blender-2.92.0-linux64.tar.xz
+tar xvf blender-2.92.0-linux64.tar.xz
+ln -s blender-2.92.0-linux64/blender .
+
+## run helloworld.py
+./blender --background --python examples/helloworld.py
 ```
 
 ## Todo
@@ -40,7 +42,7 @@ blender --background --python examples/helloworld.py
 - [x] hdr texture
 - [x] camera distortion
 - [x] projector distortion
-- [ ] docker image
+- [x] docker image
 - [ ] ABC dataset download
 - [ ] ABC dataset process
 - [x] calibration pipeline
