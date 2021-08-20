@@ -3,7 +3,7 @@
 script_dir="$(dirname $(realpath "$0"))"
 repo_dir="$script_dir/../"
 
-docker run --gpus=all -it --user 1000:1000 \
+docker run --gpus=all -it --user `id -u $USER`:`id -u $USER` \
            -v /etc/passwd:/etc/passwd \
            -v /home/$USER:/home/$USER \
            blenderfunc:latest \
