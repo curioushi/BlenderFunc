@@ -5,7 +5,8 @@ cd "$(dirname "$0")"
 
 # download blender if doesn't exist
 if [ ! -e "blender-2.92.0-linux64.tar.xz" ]; then
-  wget https://download.blender.org/release/Blender2.92/blender-2.92.0-linux64.tar.xz
+  # wget https://download.blender.org/release/Blender2.92/blender-2.92.0-linux64.tar.xz
+  wget https://mirrors.tuna.tsinghua.edu.cn/blender/blender-release/Blender2.92/blender-2.92.0-linux64.tar.xz
 fi
 
 # compress all not-ignored files in this repository
