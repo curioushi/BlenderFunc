@@ -3,4 +3,4 @@ output/
 *.pyc
 resources/cctextures/
 resources/hdr/
-docker/*.tar.xz
+*.tar.xz
