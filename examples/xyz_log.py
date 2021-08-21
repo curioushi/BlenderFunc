@@ -142,31 +142,34 @@ def parse_arguments():
         argv = []
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--output_dir', type=str, default='output/xyz_log')
+    parser.add_argument('--output_dir', type=str, default='output/xyz_log',
+                        help='output directory, the folder will be automatically created if not exist')
     parser.add_argument('--camera_type', type=str, default='XYZ-SL',
-                        help='different cameras have different fov and aspect ratio')
-    parser.add_argument('--camera_height', type=float, default=2, help='camera height in meter')
+                        help='different cameras have different fov and aspect ratio:\n'
+                             'Photoneo-M | Photoneo-L | XYZ-SL(default)')
+    parser.add_argument('--camera_height', type=float, default=2,
+                        help='camera height in meter, default: 2')
     parser.add_argument('--obstruction', type=float, default=0.2,
-                        help='control the number of obstructed points, reasonable range [0, 0.4]')
-    parser.add_argument('--tote_length', type=float, default=0.7)
-    parser.add_argument('--tote_width', type=float, default=0.7)
-    parser.add_argument('--tote_height', type=float, default=0.5)
-    parser.add_argument('--tote_thickness', type=float, default=0.03)
+                        help='control the number of obstructed points, reasonable range 0~0.4, default: 0.2')
+    parser.add_argument('--tote_length', type=float, default=0.7, help='tote x-axis dimension, default: 0.7')
+    parser.add_argument('--tote_width', type=float, default=0.7, help='tote y-axis dimension, default: 0.7')
+    parser.add_argument('--tote_height', type=float, default=0.5, help='tote z-axis dimension, default: 0.5')
+    parser.add_argument('--tote_thickness', type=float, default=0.03, help='tote thickness, default: 0.03')
     parser.add_argument('--model_path', type=str, default='resources/models/brake_disk.ply',
-                        help='CAD model, supported format: ply, stl, obj')
+                        help='CAD model, supported format: ply, stl')
     parser.add_argument('--max_faces', type=int, default=10000,
-                        help='decimate the mesh if the number of faces of mesh is bigger than this value')
-    parser.add_argument('--num_begin', type=int, default=30, help='number of objects in tote at the beginning')
-    parser.add_argument('--num_end', type=int, default=0, help='number of objects in tote in the end')
-    parser.add_argument('--num_pick', type=int, default=5, help='number of objects picked each time')
-    parser.add_argument('--max_bounces', type=int, default=3, help='render option: max bounces of light')
-    parser.add_argument('--samples', type=int, default=10, help='render option: samples for each pixel')
+                        help='decimate mesh if the number of faces of mesh is bigger than this value, default: 10000')
+    parser.add_argument('--num_begin', type=int, default=30, help='number of objects at the beginning, default: 30')
+    parser.add_argument('--num_end', type=int, default=0, help='number of objects in the end, default: 0')
+    parser.add_argument('--num_pick', type=int, default=5, help='number of objects picked each time, default: 5')
+    parser.add_argument('--max_bounces', type=int, default=3, help='render option: max bounces of light, default: 3')
+    parser.add_argument('--samples', type=int, default=10, help='render option: samples for each pixel, default: 10')
     parser.add_argument('--substeps_per_frame', type=int, default=10,
-                        help='physics option: steps per frame, higher value for higher simulation stability')
-    parser.add_argument('--enable_perfect_depth', action="store_true")
-    parser.add_argument('--enable_instance_segmap', action="store_true")
-    parser.add_argument('--enable_class_segmap', action="store_true")
-    parser.add_argument('--enable_mesh_info', action="store_true")
+                        help='physics option: higher value for higher simulation stability, default: 10')
+    parser.add_argument('--enable_perfect_depth', action="store_true", help='flag: render depth without obstruction')
+    parser.add_argument('--enable_instance_segmap', action="store_true", help='flag: render instance segmentation map')
+    parser.add_argument('--enable_class_segmap', action="store_true", help='flag: render class segmentation map')
+    parser.add_argument('--enable_mesh_info', action="store_true", help='flag: write mesh information including poses')
     args = parser.parse_args(args=argv)
 
     if args.num_begin < args.num_end:
