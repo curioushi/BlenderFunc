@@ -4,7 +4,7 @@
 
 args=$@
 
-docker run --gpus=all -it --user `id -u $USER`:`id -u $USER` \
+docker run --gpus=all -it --rm --user `id -u $USER`:`id -u $USER` \
            -v /etc/passwd:/etc/passwd \
            -v /home/$USER:/home/$USER \
            blenderfunc:latest \
