@@ -1,5 +1,6 @@
 import os
 import bpy
+import bmesh
 from blenderfunc.object.texture import make_smart_uv_project
 from blenderfunc.object.collector import get_all_mesh_objects
 from blenderfunc.utility.utility import get_object_by_name
@@ -165,8 +166,8 @@ def add_obj(filepath: str = None, name: str = 'OBJModel', properties: dict = Non
     return obj.name
 
 
-def add_object_from_file(filepath: str = None, name: str = "Model", properties: dict = None,
-                         max_vertices=float('inf')) -> str:
+def add_object_from_file(filepath: str = None, name: str = "Model", max_faces: int = 10000,
+                         properties: dict = None) -> str:
     ext = os.path.splitext(filepath)[-1]
     if ext == '.ply':
         obj_name = add_ply(filepath, name=name, properties=properties)
@@ -178,16 +179,17 @@ def add_object_from_file(filepath: str = None, name: str = "Model", properties: 
         raise Exception('Unsupported CAD file format: {}'.format(ext))
 
     obj = get_object_by_name(obj_name)
-    num_vertices_before = len(obj.data.vertices)
-    if num_vertices_before > max_vertices:
-        ratio = max_vertices / num_vertices_before
+    bpy.ops.object.editmode_toggle()
+    mesh = bmesh.from_edit_mesh(obj.data)
+    num_faces_before = len(mesh.faces)
+    if num_faces_before > max_faces:
+        ratio = max_faces / num_faces_before
         bpy.context.view_layer.objects.active = obj
-        bpy.ops.object.editmode_toggle()
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.decimate(ratio=ratio)
-        bpy.ops.object.editmode_toggle()
-        num_vertices_after = len(obj.data.vertices)
-        print('Decimate object: {} -> {}'.format(num_vertices_before, num_vertices_after))
+        num_faces_after = len(mesh.faces)
+        print('Decimate object: {} -> {}'.format(num_faces_before, num_faces_after))
+    bpy.ops.object.editmode_toggle()
 
     return obj_name
 
@@ -197,6 +199,25 @@ def duplicate_mesh_object(obj_name: str) -> str:
     bpy.context.view_layer.objects.active = obj
     bpy.ops.object.duplicate(linked=True)
     return bpy.context.active_object.name
+
+
+def export_mesh(filepath: str, obj_name: str):
+    ext = os.path.splitext(filepath)[-1]
+    if ext not in ['.ply', '.stl']:
+        raise Exception('export_mesh only support ply and stl format')
+    bpy.ops.ed.undo_push(message='before export_mesh()')
+    for obj in bpy.data.objects:
+        if obj.name != obj_name:
+            bpy.data.objects.remove(obj)
+        else:
+            obj.location = (0, 0, 0)
+            obj.rotation_euler = (0, 0, 0)
+    if ext == '.ply':
+        bpy.ops.export_mesh.ply(filepath=filepath)
+    elif ext == '.stl':
+        bpy.ops.export_mesh.stl(filepath=filepath)
+    bpy.ops.ed.undo_push(message='after export_mesh()')
+    bpy.ops.ed.undo()
 
 
 def write_meshes_info(filepath: str = '/tmp/temp.csv'):
@@ -219,4 +240,5 @@ def write_meshes_info(filepath: str = '/tmp/temp.csv'):
 
 
 __all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_ball', 'add_tote', 'add_ply', 'add_obj', 'add_stl',
-           'add_object_from_file', 'remove_mesh_object', 'duplicate_mesh_object', 'write_meshes_info']
+           'add_object_from_file', 'remove_mesh_object', 'duplicate_mesh_object', 'write_meshes_info',
+           'export_mesh']

@@ -39,6 +39,6 @@ COPY asound.conf /etc/asound.conf
 RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple  # use tsinghua source
 # run script first time to install python depandencies and load render kernels
 # enable cuda during docker build: https://stackoverflow.com/questions/59691207/docker-build-with-nvidia-runtime
-RUN ./blender --background --python examples/xyz_log.py -- --output_dir=output/xyz_log --object_path=resources/models/brake_disk.ply --num=2
+RUN ./blender --background --python examples/xyz_log.py -- --output_dir=output/xyz_log --model_path=resources/models/brake_disk.ply --num_begin=1 --num_end=1 --num_pick=1
 # HACK: make cached render kernel copyable
 RUN chmod 777 /var/tmp/OptixCache_root/
