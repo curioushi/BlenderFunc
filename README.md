@@ -60,8 +60,8 @@ synthesize_xyz_log --output_dir=$(pwd)/xyz_log
 - [x] camera distortion
 - [x] projector distortion
 - [x] docker image
-- [ ] ABC dataset download
-- [ ] ABC dataset process
+- [x] ABC dataset download
+- [x] ABC dataset process
 - [x] calibration pipeline
 - [x] support stl model
 - [ ] upgrade collision checking

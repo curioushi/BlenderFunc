@@ -3,4 +3,5 @@ output/
 *.pyc
 resources/cctextures/
 resources/hdr/
+resources/abc/
 *.tar.xz

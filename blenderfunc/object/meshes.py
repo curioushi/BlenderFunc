@@ -1,6 +1,8 @@
 import os
 import bpy
 import bmesh
+import numpy as np
+from typing import List
 from blenderfunc.object.texture import make_smart_uv_project
 from blenderfunc.object.collector import get_all_mesh_objects
 from blenderfunc.utility.utility import get_object_by_name
@@ -166,7 +168,22 @@ def add_obj(filepath: str = None, name: str = 'OBJModel', properties: dict = Non
     return obj.name
 
 
-def add_object_from_file(filepath: str = None, name: str = "Model", max_faces: int = 10000,
+def decimate_mesh(obj_name: str, max_faces: int = 10000):
+    obj = get_object_by_name(obj_name)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    mesh = bmesh.from_edit_mesh(obj.data)
+    num_faces_before = len(mesh.faces)
+    if num_faces_before > max_faces:
+        ratio = max_faces / num_faces_before
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.decimate(ratio=ratio)
+        num_faces_after = len(mesh.faces)
+        print('Decimate object "{}": {} -> {}'.format(obj_name, num_faces_before, num_faces_after))
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def add_object_from_file(filepath: str = None, name: str = "Model", max_faces: int = None,
                          properties: dict = None) -> str:
     ext = os.path.splitext(filepath)[-1]
     if ext == '.ply':
@@ -178,19 +195,8 @@ def add_object_from_file(filepath: str = None, name: str = "Model", max_faces: i
     else:
         raise Exception('Unsupported CAD file format: {}'.format(ext))
 
-    obj = get_object_by_name(obj_name)
-    bpy.ops.object.editmode_toggle()
-    mesh = bmesh.from_edit_mesh(obj.data)
-    num_faces_before = len(mesh.faces)
-    if num_faces_before > max_faces:
-        ratio = max_faces / num_faces_before
-        bpy.context.view_layer.objects.active = obj
-        bpy.ops.mesh.select_all(action='SELECT')
-        bpy.ops.mesh.decimate(ratio=ratio)
-        num_faces_after = len(mesh.faces)
-        print('Decimate object: {} -> {}'.format(num_faces_before, num_faces_after))
-    bpy.ops.object.editmode_toggle()
-
+    if max_faces is not None:
+        decimate_mesh(obj_name, max_faces)
     return obj_name
 
 
@@ -201,7 +207,7 @@ def duplicate_mesh_object(obj_name: str) -> str:
     return bpy.context.active_object.name
 
 
-def export_mesh(filepath: str, obj_name: str):
+def export_mesh(filepath: str, obj_name: str, center_of_mass: bool = False):
     ext = os.path.splitext(filepath)[-1]
     if ext not in ['.ply', '.stl']:
         raise Exception('export_mesh only support ply and stl format')
@@ -209,15 +215,33 @@ def export_mesh(filepath: str, obj_name: str):
     for obj in bpy.data.objects:
         if obj.name != obj_name:
             bpy.data.objects.remove(obj)
-        else:
-            obj.location = (0, 0, 0)
-            obj.rotation_euler = (0, 0, 0)
+    obj = bpy.data.objects[0]
+    if center_of_mass:
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_VOLUME', center='MEDIAN')
+    obj.location = (0, 0, 0)
+    obj.rotation_euler = (0, 0, 0)
     if ext == '.ply':
         bpy.ops.export_mesh.ply(filepath=filepath)
     elif ext == '.stl':
         bpy.ops.export_mesh.stl(filepath=filepath)
+    print('Export CAD Model: {}'.format(filepath))
     bpy.ops.ed.undo_push(message='after export_mesh()')
     bpy.ops.ed.undo()
+
+
+def separate_isolated_meshes(obj_name: str) -> List[str]:
+    obj = get_object_by_name(obj_name)
+    objects_before_separate = set([obj.name for obj in get_all_mesh_objects()])
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.separate(type='LOOSE')
+    bpy.ops.object.mode_set(mode='OBJECT')
+    objects_after_separate = set([obj.name for obj in get_all_mesh_objects()])
+    ret_names = list(objects_after_separate - objects_before_separate)
+    ret_names.append(obj_name)
+    print('Separate model: {} -> {}'.format(obj_name, ret_names))
+    return ret_names
 
 
 def write_meshes_info(filepath: str = '/tmp/temp.csv'):
@@ -240,5 +264,5 @@ def write_meshes_info(filepath: str = '/tmp/temp.csv'):
 
 
 __all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_ball', 'add_tote', 'add_ply', 'add_obj', 'add_stl',
-           'add_object_from_file', 'remove_mesh_object', 'duplicate_mesh_object', 'write_meshes_info',
-           'export_mesh']
+           'add_object_from_file', 'decimate_mesh', 'remove_mesh_object', 'duplicate_mesh_object',
+           'separate_isolated_meshes', 'write_meshes_info', 'export_mesh']
