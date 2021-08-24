@@ -130,42 +130,25 @@ def add_tote(length: float = 1.0, width: float = 1.0, height: float = 0.5, thick
     return obj.name
 
 
-def add_ply(filepath: str = None, name: str = 'PlyModel', properties: dict = None) -> str:
+def _add_ply(filepath: str = None) -> bpy.types.Object:
     bpy.ops.import_mesh.ply(filepath=filepath)
     obj = bpy.context.active_object
-    obj.name = name
-    obj.data.name = name
-    make_smart_uv_project(obj.name)
-    if properties is not None:
-        for key, value in properties.items():
-            obj[key] = value
-    return obj.name
+    return obj
 
 
-def add_stl(filepath: str = None, name: str = 'STLModel', properties: dict = None) -> str:
+def _add_stl(filepath: str = None) -> bpy.types.Object:
     bpy.ops.import_mesh.stl(filepath=filepath)
     obj = bpy.context.active_object
-    obj.name = name
-    obj.data.name = name
-    make_smart_uv_project(obj.name)
-    if properties is not None:
-        for key, value in properties.items():
-            obj[key] = value
-    return obj.name
+    return obj
 
 
-def add_obj(filepath: str = None, name: str = 'OBJModel', properties: dict = None) -> str:
+def _add_obj(filepath: str = None) -> bpy.types.Object:
     bpy.ops.import_scene.obj(filepath=filepath)
     objs = bpy.context.selected_objects
     if len(objs) > 1:
         raise Exception("Only support one object in OBJ file: {}".format(objs))
     obj = objs[0]
-    obj.name = name
-    obj.data.name = name
-    if properties is not None:
-        for key, value in properties.items():
-            obj[key] = value
-    return obj.name
+    return obj
 
 
 def decimate_mesh(obj_name: str, max_faces: int = 10000):
@@ -184,20 +167,31 @@ def decimate_mesh(obj_name: str, max_faces: int = 10000):
 
 
 def add_object_from_file(filepath: str = None, name: str = "Model", max_faces: int = None,
-                         properties: dict = None) -> str:
+                         uv_project: bool = False, properties: dict = None) -> str:
     ext = os.path.splitext(filepath)[-1]
     if ext == '.ply':
-        obj_name = add_ply(filepath, name=name, properties=properties)
+        obj = _add_ply(filepath)
     elif ext == '.stl':
-        obj_name = add_stl(filepath, name=name, properties=properties)
+        obj = _add_stl(filepath)
     elif ext == '.obj':
-        obj_name = add_obj(filepath, name=name, properties=properties)
+        obj = _add_obj(filepath)
     else:
         raise Exception('Unsupported CAD file format: {}'.format(ext))
 
+    obj.name = name
+    obj.data.name = name
+
+    if properties is not None:
+        for key, value in properties.items():
+            obj[key] = value
+
+    if uv_project:
+        make_smart_uv_project(obj.name)
+
     if max_faces is not None:
-        decimate_mesh(obj_name, max_faces)
-    return obj_name
+        decimate_mesh(obj.name, max_faces)
+
+    return obj.name
 
 
 def duplicate_mesh_object(obj_name: str) -> str:
@@ -263,6 +257,6 @@ def write_meshes_info(filepath: str = '/tmp/temp.csv'):
             f.write('{}, {}, {}, {}\n'.format(instance_id, class_id, name, pose))
 
 
-__all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_ball', 'add_tote', 'add_ply', 'add_obj', 'add_stl',
-           'add_object_from_file', 'decimate_mesh', 'remove_mesh_object', 'duplicate_mesh_object',
-           'separate_isolated_meshes', 'write_meshes_info', 'export_mesh']
+__all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_ball', 'add_tote', 'add_object_from_file', 'decimate_mesh',
+           'remove_mesh_object', 'duplicate_mesh_object', 'separate_isolated_meshes', 'write_meshes_info',
+           'export_mesh']

@@ -36,34 +36,46 @@ extract_dir = os.path.join(dataset_dir, "extract")
 os.makedirs(extract_dir, exist_ok=True)
 process1_dir = os.path.join(dataset_dir, "process1")
 os.makedirs(process1_dir, exist_ok=True)
+done_dir = os.path.join(dataset_dir, "done")
+os.makedirs(done_dir, exist_ok=True)
 
 filename = 'abc_{}_stl2_v00.7z'.format(abc_index)
 url = abc_info[filename]['url']
 md5 = abc_info[filename]['md5']
 
-# download
-download_filepath = os.path.join(download_dir, filename)
-while True:
-    check_success = False
-    if os.path.exists(download_filepath):
-        check_success = check_md5(download_filepath, md5)
-        if check_success:
-            print('md5 check success, next step')
-            break
-    if not check_success:
-        print('md5 check failed, download again')
-        subprocess.Popen(['wget', '--no-check-certificate', url, '-O', os.path.join(download_dir, filename)]).wait()
+done_output_dir = os.path.join(done_dir, os.path.splitext(filename)[0])
+if not os.path.exists(done_output_dir):
+    # download
+    download_filepath = os.path.join(download_dir, filename)
+    while True:
+        check_success = False
+        if os.path.exists(download_filepath):
+            check_success = check_md5(download_filepath, md5)
+            if check_success:
+                print('md5 check success, next step')
+                break
+        if not check_success:
+            print('md5 check failed, download again')
+            subprocess.Popen(['wget', '--no-check-certificate', url, '-O', os.path.join(download_dir, filename)]).wait()
 
-# extract 7zip
-extract_output_dir = os.path.join(extract_dir, os.path.splitext(filename)[0])
-subprocess.Popen(['7z', '-y', 'x', download_filepath, '-o{}'.format(extract_output_dir)]).wait()
+    # extract 7zip
+    extract_output_dir = os.path.join(extract_dir, os.path.splitext(filename)[0])
+    subprocess.Popen(['7z', '-y', 'x', download_filepath, '-o{}'.format(extract_output_dir)]).wait()
 
-# process CAD models
-process1_output_dir = os.path.join(process1_dir, os.path.splitext(filename)[0])
-subprocess.Popen(['blender', '--background', '--python', 'examples/abc_process.py', '--',
-                  '--input_dir={}'.format(extract_output_dir),
-                  '--output_dir={}'.format(process1_output_dir)]).wait()
+    # process CAD models
+    process1_output_dir = os.path.join(process1_dir, os.path.splitext(filename)[0])
+    subprocess.Popen(['blender', '--background', '--python', 'examples/abc_process.py', '--',
+                      '--input_dir={}'.format(extract_output_dir),
+                      '--output_dir={}'.format(process1_output_dir)]).wait()
 
-# remove redundant files
-os.remove(download_filepath)
-shutil.rmtree(extract_output_dir)
+    # post process
+    exit_status_file = os.path.join(process1_output_dir, 'exit_status')
+    if os.path.exists(exit_status_file):
+        with open(exit_status_file, 'r') as f:
+            result = f.read()
+            if 'Done' in result:
+                os.remove(download_filepath)
+                shutil.rmtree(extract_output_dir)
+                shutil.move(process1_output_dir, done_dir)
+
+print('Done')

@@ -17,7 +17,7 @@ bf.initialize()
 bf.set_background_light(strength=0)
 plane_name = bf.add_plane(size=10)
 bf.get_object_by_name(plane_name).location = (0, 0, -1)
-board_name = bf.add_obj(filepath='resources/models/calib_board/560x450.obj', name='CalibBoard')
+board_name = bf.add_object_from_file(filepath='resources/models/calib_board/560x450.obj', name='CalibBoard')
 bf.set_camera(opencv_matrix=cam_K, distort_coeffs=cam_distort, image_resolution=image_resolution, pose=cam2world)
 
 # ensure that the calibration board get a good pose

@@ -22,8 +22,8 @@ bf.set_camera(opencv_matrix=cam_K, image_resolution=image_resolution, distort_co
 bf.add_plane(size=3, properties=dict(physics=False, collision_shape='CONVEX_HULL', class_id=1))
 tote = bf.add_tote(length=0.7, width=0.9, height=0.7,
                    properties=dict(physics=False, collision_shape='MESH', class_id=2))
-obj = bf.add_ply(filepath='resources/models/brake_disk.ply',
-                 properties=dict(physics=True, collision_shape='CONVEX_HULL', class_id=3))
+obj = bf.add_object_from_file(filepath='resources/models/brake_disk.ply', uv_project=True,
+                              properties=dict(physics=True, collision_shape='CONVEX_HULL', class_id=3))
 pose_sampler = bf.in_tote_sampler(tote, obj, num)
 bf.collision_avoidance_positioning(obj, pose_sampler)
 for _ in range(num - 1):

@@ -58,11 +58,12 @@ def get_material_by_name(name: str) -> bpy.types.Material:
         raise Exception('Material "{}" does not exist'.format(name))
 
 
-def initialize_folder(directory: str):
+def initialize_folder(directory: str, clear_files: bool = False):
     os.makedirs(directory, exist_ok=True)
-    for file in glob(directory + '/*'):
-        if not os.path.isdir(file):
-            os.remove(file)
+    if clear_files:
+        for file in glob(directory + '/*'):
+            if not os.path.isdir(file):
+                os.remove(file)
 
 
 __all__ = ['save_blend', 'get_material_by_name', 'get_object_by_name', 'initialize_folder']

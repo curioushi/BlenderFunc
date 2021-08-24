@@ -20,8 +20,9 @@ bf.set_camera(opencv_matrix=[[1200, 0, 500],
 bf.add_light(location=[0.32, -0.19, 0.34],
              energy=30)
 bf.add_plane(size=100, properties=dict(physics=False, collision_shape='CONVEX_HULL', collision_margin=0.00001))
-obj_name = bf.add_ply(filepath='resources/models/brake_disk.ply',
-                 properties=dict(physics=True, collision_shape='CONVEX_HULL', collision_margin=0.00001))
+obj_name = bf.add_object_from_file(filepath='resources/models/brake_disk.ply', uv_project=True,
+                                   properties=dict(physics=True, collision_shape='CONVEX_HULL',
+                                                   collision_margin=0.00001))
 obj = bf.get_object_by_name(obj_name)
 obj.location = (0, 0, 0.1)
 
