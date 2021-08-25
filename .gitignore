@@ -1,7 +1,8 @@
 .idea/
 output/
-*.pyc
 resources/cctextures/
 resources/hdr/
 resources/abc/
+docs/build
+*.pyc
 *.tar.xz
