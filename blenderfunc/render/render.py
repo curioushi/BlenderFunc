@@ -3,14 +3,12 @@ import cv2
 import bpy
 import addon_utils
 import imageio
-import time
-import random
 import numpy as np
 from typing import List
 from blenderfunc.object.texture import load_image
-from blenderfunc.utility.initialize import remove_all_materials, set_background_light
-from blenderfunc.utility.utility import save_blend, get_object_by_name
-from blenderfunc.object.collector import get_all_mesh_objects
+from blenderfunc.object.light import set_background_light
+from blenderfunc.object.meshes import get_all_mesh_objects
+from blenderfunc.utility.utility import save_blend, get_object_by_name, remove_all_materials
 
 
 def _distort_image(image: np.ndarray):
@@ -92,13 +90,31 @@ def _initialize_renderer(samples: int = 32, denoiser: str = None, max_bounces: i
 
 def render_color(filepath: str = '/tmp/temp.png', save_blend_file: bool = False,
                  samples: int = 32, denoiser: str = None, max_bounces: int = 3, color_mode: str = 'RGB',
-                 color_depth: int = '8', auto_tile_size: bool = True, num_threads: int = 1):
+                 color_depth: int = 8):
+    """Render a color image and save it to the specified filepath
+    
+    :param filepath: the output image path
+    :param save_blend_file: save the ".blend" file if true
+    :param samples: samples per pixel for rendering, higher value for higher quality but slower rendering
+    :param denoiser: denoiser type for rendering, options:
+
+        - None, no denoiser
+
+        - NLM, native non-local means denoiser running on CPU
+
+        - OpenImageDenoise, Intel OpenImageDenoise AI Denoiser running on CPU
+
+        - OPTIX, Optix AI denoiser with GPU acceleration
+    :param max_bounces: max number of light bounces, higher value for higher quality but slower rendering
+    :param color_mode: RGB or BW
+    :param color_depth: 8 or 16 bits
+    """
     if os.path.splitext(filepath)[-1] not in ['.png']:
         raise Exception('unsupported image format: {}'.format(os.path.splitext(filepath)))
 
     bpy.ops.ed.undo_push(message='before render_color()')
 
-    _initialize_renderer(samples, denoiser, max_bounces, auto_tile_size, num_threads)
+    _initialize_renderer(samples, denoiser, max_bounces, auto_tile_size=True, num_threads=1)
 
     # make output folder
     output_dir = os.path.abspath(os.path.dirname(filepath))
@@ -117,6 +133,7 @@ def render_color(filepath: str = '/tmp/temp.png', save_blend_file: bool = False,
     file_output_node.file_slots['Image'].path = 'image'
     if color_mode in ['BW', 'RGB', 'RGBA']:
         file_output_node.format.color_mode = color_mode
+    color_depth = str(color_depth)
     if color_depth in ['8', '16']:
         file_output_node.format.color_depth = color_depth
     node_tree.links.new(render_layers_node.outputs['Image'], file_output_node.inputs['Image'])
@@ -140,18 +157,32 @@ def render_color(filepath: str = '/tmp/temp.png', save_blend_file: bool = False,
     bpy.ops.ed.undo()
 
 
-def apply_nan_mask(filepath: str, maskpath: str, outputpath: str = None):
+def apply_binary_mask(filepath: str, maskpath: str, outputpath: str = None):
+    """Apply a binary mask to a image and save it to a specified path
+
+    :param filepath: input image filepath
+    :param maskpath: input mask filepath
+    :param outputpath: output image filepath, if it is None, outputpath will be equal to filepath
+    """
+    if outputpath is None:
+        outputpath = filepath
     image = imageio.imread(filepath)
     mask = imageio.imread(maskpath) < 127
     image[mask] = 0
-    if outputpath is None:
-        imageio.imwrite(filepath, image)
-    else:
-        imageio.imwrite(outputpath, image)
+    imageio.imwrite(outputpath, image)
 
 
 def render_light_mask(filepath: str = '/tmp/temp.png', light_name: str = '', cast_shadow: bool = True,
                       energy: float = 100, threshold: float = 0.0, save_blend_file: bool = False):
+    """Render a light mask image and save it to a specified filepath
+
+    :param filepath: the output image path
+    :param light_name: the name of the light source
+    :param cast_shadow: whether cast the shadow of light
+    :param energy: light energy
+    :param threshold: threshold to control the area of shadow area, higher value for larger shadow area
+    :param save_blend_file: save the “.blend” file if true
+    """
     if os.path.splitext(filepath)[-1] not in ['.png']:
         raise Exception('Unsupported image format: {}'.format(os.path.splitext(filepath)))
     light = get_object_by_name(light_name)
@@ -247,6 +278,13 @@ def render_light_mask(filepath: str = '/tmp/temp.png', light_name: str = '', cas
 
 
 def render_depth(filepath: str = '/tmp/temp.png', depth_scale=0.00005, save_blend_file=False, save_npz=True):
+    """Render a depth image and save it to the specified path, unit meter
+
+    :param filepath: the output image path
+    :param depth_scale: the depth value will be quantized by divide this value
+    :param save_blend_file: save the “.blend” file if true
+    :param save_npz: save the raw depth array to a ".npz" (compressed numpy) file if true
+    """
     if os.path.splitext(filepath)[-1] not in ['.png']:
         raise Exception('Unsupported image format: {}'.format(os.path.splitext(filepath)))
 
@@ -337,6 +375,14 @@ def _color2segmap(color: np.ndarray, index_color_map: dict):
 
 
 def render_instance_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False, save_npz=True):
+    """Render a instance segmentation map and save it to a specified filepath
+
+    instance_id: background(void space) = 0, other objects = 1, 2, 3, ...
+
+    :param filepath: the output image path, only for visualization
+    :param save_blend_file: save the “.blend” file if true
+    :param save_npz: save the instance segmentation map array to a ".npz" (compressed numpy) file if true
+    """
     if os.path.splitext(filepath)[-1] not in ['.png']:
         raise Exception('Unsupported image format: {}'.format(os.path.splitext(filepath)))
 
@@ -418,6 +464,14 @@ def render_instance_segmap(filepath: str = '/tmp/temp.png', save_blend_file=Fals
 
 
 def render_class_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False, save_npz=True):
+    """Render a class segmentation map and save it to a specified filepath. You should first set
+    the custom properties **class_id** of each objects in the scene first, otherwise, all objects will
+    have a default **class_id = 0**.
+
+    :param filepath: the output image path, only for visualization
+    :param save_blend_file: save the “.blend” file if true
+    :param save_npz: save the class segmentation map array to a ".npz" (compressed numpy) file if true
+    """
     if os.path.splitext(filepath)[-1] not in ['.png']:
         raise Exception('Unsupported image format: {}'.format(os.path.splitext(filepath)))
 
@@ -503,7 +557,13 @@ def render_class_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False, 
     bpy.ops.ed.undo()
 
 
-def render_normal_map(filepath: str = '/tmp/temp.png', save_blend_file=False, save_npz=True):
+def render_normal(filepath: str = '/tmp/temp.png', save_blend_file=False, save_npz=True):
+    """Render a normal image and save it to the specified path
+
+    :param filepath: the output image path, only for visualization
+    :param save_blend_file: save the “.blend” file if true
+    :param save_npz: save the raw normal array to a ".npz" (compressed numpy) file if true
+    """
     if os.path.splitext(filepath)[-1] not in ['.png']:
         raise Exception('Unsupported image format: {}'.format(os.path.splitext(filepath)))
 
@@ -574,4 +634,4 @@ def render_normal_map(filepath: str = '/tmp/temp.png', save_blend_file=False, sa
 
 
 __all__ = ['render_color', 'render_depth', 'render_light_mask', 'render_instance_segmap', 'render_class_segmap',
-           'render_normal_map', 'apply_nan_mask']
+           'render_normal', 'apply_binary_mask']

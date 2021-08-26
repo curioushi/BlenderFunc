@@ -1,11 +1,6 @@
 import sys
-
 sys.path.append('.')
-from blenderfunc.utility.custom_packages import setup_custom_packages
-
-setup_custom_packages(["numpy", "Pillow", "xmltodict"])
-
-import blenderfunc.all as bf
+import blenderfunc as bf
 
 bf.initialize()
 bf.set_background_light(strength=1)

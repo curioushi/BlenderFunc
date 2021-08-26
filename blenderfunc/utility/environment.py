@@ -10,31 +10,42 @@ pre_python_packages_path = os.path.join(python_bin_folder, "..", "lib", "python3
 custom_python_packages_path = os.path.abspath(os.path.join(blender_path, 'custom-python-packages'))
 
 
-def get_blender_path():
+def get_blender_path() -> str:
+    """Get root path to blender software"""
     return blender_path
 
 
-def get_blender_version():
+def get_blender_version() -> str:
+    """Get the version of blender"""
     return blender_version
 
 
-def get_custom_python_packages_path():
+def get_custom_python_packages_path() -> str:
+    """Get the path to the custom python packages of Blender"""
     return custom_python_packages_path
 
 
-def get_pre_python_packages_path():
+def get_pre_python_packages_path() -> str:
+    """Get the path to the previous python packages of Blender"""
     return pre_python_packages_path
 
 
-def get_python_bin_folder():
+def get_python_bin_folder() -> str:
+    """Get the python bin folder of Blender"""
     return python_bin_folder
 
 
-def get_python_bin():
+def get_python_bin() -> str:
+    """Get the python binary path of Blender"""
     return python_bin
 
 
-def get_installed_packages():
+def get_installed_packages() -> dict:
+    """Get the installed packages in previous and custom python packages path
+
+    :return: The installed python packages
+    :rtype: dict, key=package_name, val=package_version
+    """
     installed_packages = subprocess.check_output(
         [python_bin, "-m", "pip", "list", "--format=freeze", "--path={}".format(pre_python_packages_path)])
     installed_packages += subprocess.check_output(

@@ -2,7 +2,7 @@
 
 This repo was inspired by BlenderProc: https://github.com/DLR-RM/BlenderProc.git
 
-The differences between this project and BlenderProc are:
+The differences between this project and BlenderProc:
 
 - Instead of writing config in BlenderProc, you can directly write python script to control the data generation process, 
   which gives you more flexibility
@@ -65,6 +65,7 @@ synthesize_xyz_log --output_dir=$(pwd)/xyz_log
 - [x] calibration pipeline
 - [x] support stl model
 - [ ] upgrade collision checking
+- [ ] pose sampler return same format
 - [x] xyz-log format
 - [ ] coco format
 - [ ] documentation
@@ -72,3 +73,4 @@ synthesize_xyz_log --output_dir=$(pwd)/xyz_log
 ### bugs
 - [x] physics simulation origin wrong
 - [x] fail to enable GPU
+- [ ] set object.name to an existed name

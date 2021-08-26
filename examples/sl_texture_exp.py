@@ -1,11 +1,6 @@
 import sys
-
 sys.path.append('.')
-from blenderfunc.utility.custom_packages import setup_custom_packages
-
-setup_custom_packages(["numpy", "Pillow", "xmltodict", "matplotlib"])
-
-import blenderfunc.all as bf
+import blenderfunc as bf
 import matplotlib.pyplot as plt
 import numpy as np
 import json

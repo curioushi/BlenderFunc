@@ -6,16 +6,29 @@
 Welcome to BlenderFunc's documentation!
 =======================================
 
+.. only: not latex
+
+    Contents:
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   :caption: Getting Started
 
+   introduction
+   getting_started
+   download_resources
+   use_docker
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Examples
 
-Indices and tables
-==================
+   examples/helloworld
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+   :maxdepth: 1
+   :caption: Python API
 
+   python_api/blenderfunc.utility
+   python_api/blenderfunc.object
+   python_api/blenderfunc.render

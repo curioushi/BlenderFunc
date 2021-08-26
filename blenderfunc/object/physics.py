@@ -1,12 +1,11 @@
-from typing import Union, List
+from typing import Union, Callable
 
 import bpy
 import numpy as np
 from mathutils import Vector, Euler
 
-from blenderfunc.object.meshes import remove_mesh_object
-from blenderfunc.object.collector import get_all_mesh_objects, get_mesh_objects_by_custom_properties
-from blenderfunc.utility.utility import seconds_to_frames
+from blenderfunc.object.meshes import get_all_mesh_objects
+from blenderfunc.utility.utility import seconds_to_frames, get_object_by_name
 
 
 def _enable_rigid_body(obj: bpy.types.Object, physics_type: str = 'PASSIVE',
@@ -163,6 +162,17 @@ def _bake_physics_simulation(min_simulation_time: float, max_simulation_time: fl
 
 def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: float = 10.0,
                        substeps_per_frame: int = 10):
+    """Run physics simulation for a few seconds then freeze the scene. Simulation will stop automatically if the object
+    is no longer moving or if the *max_simulation_time* has been reached
+
+    :param min_simulation_time: the simulation will at least run *min_simulation_time* seconds
+    :type min_simulation_time: float
+    :param max_simulation_time: the simulation will at most run *max_simulation_time* seconds
+    :type max_simulation_time: float
+    :param substeps_per_frame: number of substeps to solve physics computation per frame, higher value for more stable
+        simulation
+    :type substeps_per_frame: int
+    """
     # enable rigid body
     for obj in get_all_mesh_objects():
         physics_type = 'ACTIVE' if obj.get('physics', False) else 'PASSIVE'
@@ -198,17 +208,62 @@ def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: fl
         _disable_rigid_body(obj)
 
 
-def remove_highest_object(mesh_objects: List[bpy.types.Object] = None):
-    if mesh_objects is None:
-        mesh_objects = get_mesh_objects_by_custom_properties({"physics": True})
+def _check_no_collision(obj: bpy.types.Object):
+    objects_to_check_against = get_all_mesh_objects()
 
-    index = -1
-    height = -float('inf')
-    for i, obj in enumerate(mesh_objects):
-        if obj.location[-1] > height:
-            height = obj.location[-1]
-            index = i
-    remove_mesh_object(mesh_objects[index].name)
+    no_collision = True
+    for collision_obj in objects_to_check_against:
+        if collision_obj == obj:
+            continue
+        intersection = _check_bb_intersection(obj, collision_obj)
+        if intersection:
+            no_collision = False
+            break
+    return no_collision
 
 
-__all__ = ['physics_simulation', 'remove_highest_object']
+def _get_bound_box(obj: bpy.types.Object):
+    return [obj.matrix_world @ Vector(cord) for cord in obj.bound_box]
+
+
+def _check_bb_intersection(obj1: bpy.types.Object, obj2: bpy.types.Object):
+    def min_and_max_point(bb):
+        values = np.array(bb)
+        return np.min(values, axis=0), np.max(values, axis=0)
+
+    bb1 = _get_bound_box(obj1)
+    min_b1, max_b1 = min_and_max_point(bb1)
+    bb2 = _get_bound_box(obj2)
+    min_b2, max_b2 = min_and_max_point(bb2)
+
+    intersection = True
+    for min_b1_val, max_b1_val, min_b2_val, max_b2_val in zip(min_b1, max_b1, min_b2, max_b2):
+        intersection = intersection and (max_b2_val >= min_b1_val and max_b1_val >= min_b2_val)
+
+    return intersection
+
+
+def collision_free_positioning(obj_name: str, pose_sampler: Callable, max_trials: int = 100):
+    """Placing an object in a collision free position
+
+    :param obj_name: the name of object to be placed
+    :type obj_name: str
+    :param pose_sampler: a random pose generator
+    :type pose_sampler: function
+    :param max_trials: max number of trials
+    :type max_trials: int
+    """
+    obj = get_object_by_name(obj_name)
+    for i in range(max_trials):
+        pos, euler = pose_sampler()
+        obj.location = pos
+        obj.rotation_euler = euler
+        bpy.context.view_layer.update()
+        no_collision = _check_no_collision(obj)
+        if no_collision:
+            print('Successfully positioning object in {} trials'.format(i + 1))
+            return
+    print('Failed to avoid collision when positioning')
+
+
+__all__ = ['physics_simulation', 'collision_free_positioning']

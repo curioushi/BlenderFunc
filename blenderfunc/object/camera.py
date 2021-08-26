@@ -1,10 +1,9 @@
 from typing import List
 
-import cv2
 import bpy
 import numpy as np
 from mathutils import Matrix
-from blenderfunc.utility.initialize import remove_all_cameras
+from blenderfunc.utility.utility import remove_all_cameras
 
 
 def set_camera(opencv_matrix: List[List[float]] = None,
@@ -12,8 +11,24 @@ def set_camera(opencv_matrix: List[List[float]] = None,
                distort_coeffs: List[float] = None,
                pose: List[List[float]] = None,
                clip_start: float = 0.1,
-               clip_end: float = 100,
-               name: str = 'Camera') -> str:
+               clip_end: float = 100) -> str:
+    """Set the camera in the Blender environment
+
+    :param opencv_matrix: 3x3 intrinsics matrix, [[fx, 0, cx], [0, fy, cy], [0, 0, 1]]
+    :type opencv_matrix: List of Lists
+    :param image_resolution: [image_width, image_height]
+    :type image_resolution: List
+    :param distort_coeffs: [k1, k2, p1, p2, k3]
+    :type distort_coeffs: List
+    :param pose: 4x4 extrinsic matrix
+    :type pose: List of Lists
+    :param clip_start: near_z of frustum
+    :type clip_start: float
+    :param clip_end: far_z of frustum
+    :type clip_end: float
+    :return: object_name
+    :rtype: str
+    """
     if opencv_matrix is None:
         opencv_matrix = [[400, 0, 400], [0, 400, 300], [0, 0, 1]]
     if image_resolution is None:
@@ -30,8 +45,8 @@ def set_camera(opencv_matrix: List[List[float]] = None,
     cam_ob = bpy.context.active_object
     cam = cam_ob.data
     bpy.context.scene.camera = cam_ob
-    cam_ob.name = name
-    cam.name = name
+    cam_ob.name = 'Camera'
+    cam.name = 'Camera'
     cam.sensor_fit = 'HORIZONTAL'
 
     fx, fy = opencv_matrix[0][0], opencv_matrix[1][1]

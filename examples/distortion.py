@@ -1,11 +1,6 @@
 import sys
-
 sys.path.append('.')
-from blenderfunc.utility.custom_packages import setup_custom_packages
-
-setup_custom_packages(["numpy", "Pillow", "xmltodict"])
-
-import blenderfunc.all as bf
+import blenderfunc as bf
 
 cam_K = [[512, 0, 256], [0, 512, 256], [0, 0, 1]]
 image_resolution = [512, 512]

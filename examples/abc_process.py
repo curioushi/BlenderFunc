@@ -1,14 +1,9 @@
 import sys
-
 sys.path.append('.')
-from blenderfunc.utility.custom_packages import setup_custom_packages
-
-setup_custom_packages(["numpy", "Pillow", "xmltodict", "pyyaml", "opencv-python", "imageio", "tqdm"])
-
 import os
 import sys
 import argparse
-import blenderfunc.all as bf
+import blenderfunc as bf
 from tqdm import tqdm
 from glob import glob
 
@@ -53,8 +48,8 @@ for input_file in tqdm(input_files, position=0, leave=True):
             os.remove(input_file)
             continue
 
-        bf.decimate_mesh(obj_name, max_faces=10000)
-        bf.export_mesh(output_file, obj_name, center_of_mass=True)
+        bf.decimate_mesh_object(obj_name, max_faces=10000)
+        bf.export_mesh_object(output_file, obj_name, center_of_mass=True)
         os.remove(input_file)
     except:
         pass

@@ -1,17 +1,12 @@
 import sys
-
 sys.path.append('.')
-from blenderfunc.utility.custom_packages import setup_custom_packages
-
-setup_custom_packages(["numpy", "Pillow", "xmltodict", "pyyaml", "opencv-python", "imageio"])
-
 import argparse
 import os
 import sys
 import json
 import yaml
 import numpy as np
-import blenderfunc.all as bf
+import blenderfunc as bf
 import time
 from typing import List
 
@@ -194,12 +189,12 @@ tote = bf.add_tote(length=args.tote_length, width=args.tote_width, height=args.t
 obj = bf.add_object_from_file(filepath=args.model_path, max_faces=args.max_faces,
                               name=os.path.basename(args.model_path),
                               properties=dict(physics=True, collision_shape='CONVEX_HULL', class_id=2))
-bf.export_mesh(filepath=os.path.join(output_dir, 'model.stl'), obj_name=obj)
+bf.export_mesh_object(filepath=os.path.join(output_dir, 'model.stl'), obj_name=obj)
 pose_sampler = bf.in_tote_sampler(tote, obj, args.num_begin)
-bf.collision_avoidance_positioning(obj, pose_sampler)
+bf.collision_free_positioning(obj, pose_sampler)
 for _ in range(args.num_begin - 1):
     obj = bf.duplicate_mesh_object(obj)
-    bf.collision_avoidance_positioning(obj, pose_sampler)
+    bf.collision_free_positioning(obj, pose_sampler)
 
 dump_camera_json(filepath=output_dir + '/camera.json', camera_id='BlenderCamera', camera_name='BlenderCamera',
                  intrinsics=camera['intrinsics'], image_resolution=camera['image_resolution'],
@@ -210,7 +205,7 @@ dump_env_yml(filepath=output_dir + '/env.yml', tote_length=args.tote_length, tot
 num_pick_seq = compute_num_pick_sequence(args.num_begin, args.num_end, args.num_pick)
 for i, num_pick in enumerate(num_pick_seq):
     for _ in range(num_pick):
-        bf.remove_highest_object()
+        bf.remove_highest_mesh_object()
     bf.physics_simulation(substeps_per_frame=args.substeps_per_frame)
     timestamp = int(time.time())
     prefix = '{}/{}_{}_'.format(output_dir, timestamp, args.camera_type)
@@ -219,11 +214,11 @@ for i, num_pick in enumerate(num_pick_seq):
     bf.render_depth(prefix + 'aligned_depth.png', depth_scale=camera['depth_scale'], save_npz=False)
     if not args.enable_perfect_depth:
         bf.render_light_mask(prefix + 'light_mask.png', light_name, threshold=args.obstruction)
-        bf.apply_nan_mask(prefix + 'aligned_depth.png', prefix + 'light_mask.png', prefix + 'aligned_depth.png')
+        bf.apply_binary_mask(prefix + 'aligned_depth.png', prefix + 'light_mask.png', prefix + 'aligned_depth.png')
         os.remove(prefix + 'light_mask.png')
     if args.enable_instance_segmap:
         bf.render_instance_segmap(prefix + 'instance_segmap.png')
     if args.enable_class_segmap:
         bf.render_class_segmap(prefix + 'class_segmap.png')
     if args.enable_mesh_info:
-        bf.write_meshes_info(prefix + 'mesh_info.csv')
+        bf.export_meshes_info(prefix + 'mesh_info.csv')

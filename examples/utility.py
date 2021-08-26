@@ -1,3 +1,5 @@
+import blenderfunc as bf
+bf.setup_custom_packages(['xmltodict'])
 import xmltodict
 import numpy as np
 

@@ -1,14 +1,26 @@
 import os
 import bpy
 import bmesh
-import numpy as np
 from typing import List
-from blenderfunc.object.texture import make_smart_uv_project
-from blenderfunc.object.collector import get_all_mesh_objects
 from blenderfunc.utility.utility import get_object_by_name
 
 
+def _make_smart_uv_project(obj_name: str):
+    obj = get_object_by_name(obj_name)
+    if obj.type == 'MESH':
+        prev_active = bpy.context.view_layer.objects.active
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.editmode_toggle()  # entering edit mode
+        bpy.ops.mesh.select_all(action='SELECT')  # select all objects elements
+        bpy.ops.uv.smart_project()  # the actual unwrapping operation
+        bpy.ops.object.editmode_toggle()  # exiting edit mode
+        bpy.context.view_layer.objects.active = prev_active
+    else:
+        raise Exception("only MESH object can be smart uv project")
+
+
 def remove_mesh_object(obj_name: str):
+    """Remove the mesh object by its name"""
     obj = bpy.data.objects.get(obj_name, None)
     if obj:
         if obj.type == 'MESH':
@@ -17,7 +29,27 @@ def remove_mesh_object(obj_name: str):
             raise Exception('This object is not a mesh: {}'.format(obj.name))
 
 
+def remove_highest_mesh_object(mesh_objects: List[bpy.types.Object] = None):
+    """Remove the highest mesh object in the scene
+
+    :param mesh_objects: the highest object in these objects will be removed, if this value is None, all objects with
+        custom properties "physics = True" will be selected
+    :type mesh_objects: List of bpy.types.Object
+    """
+    if mesh_objects is None:
+        mesh_objects = get_mesh_objects_by_custom_properties({"physics": True})
+
+    index = -1
+    height = -float('inf')
+    for i, obj in enumerate(mesh_objects):
+        if obj.location[-1] > height:
+            height = obj.location[-1]
+            index = i
+    remove_mesh_object(mesh_objects[index].name)
+
+
 def add_plane(size: float = 1.0, name: str = 'Plane', properties: dict = None) -> str:
+    """Add a plane to the scene"""
     bpy.ops.mesh.primitive_plane_add(size=size)
     obj = bpy.context.active_object
     obj.name = name
@@ -30,6 +62,7 @@ def add_plane(size: float = 1.0, name: str = 'Plane', properties: dict = None) -
 
 
 def add_cube(size: float = 2.0, name: str = 'Cube', properties: dict = None) -> str:
+    """Add a cube to the scene"""
     bpy.ops.mesh.primitive_cube_add(size=size)
     obj = bpy.context.active_object
     obj.name = name
@@ -42,6 +75,7 @@ def add_cube(size: float = 2.0, name: str = 'Cube', properties: dict = None) -> 
 
 
 def add_ball(radius: float = 1.0, subdivisions=4, name: str = 'Ball', properties: dict = None) -> str:
+    """Add a ball to the scene"""
     bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=subdivisions, radius=radius)
     obj = bpy.context.active_object
     obj.name = name
@@ -55,6 +89,7 @@ def add_ball(radius: float = 1.0, subdivisions=4, name: str = 'Ball', properties
 
 def add_cylinder(radius: float = 0.1, depth: float = 0.3, vertices: int = 64, name: str = 'Cylinder',
                  properties: dict = None) -> str:
+    """Add a cylinder to the scene"""
     bpy.ops.mesh.primitive_cylinder_add(vertices=vertices, radius=radius, depth=depth)
     obj = bpy.context.active_object
     obj.name = name
@@ -68,6 +103,7 @@ def add_cylinder(radius: float = 0.1, depth: float = 0.3, vertices: int = 64, na
 
 def add_tote(length: float = 1.0, width: float = 1.0, height: float = 0.5, thickness: float = 0.02,
              name: str = 'Tote', properties: dict = None) -> str:
+    """Add a tote to the scene"""
     vertices = [
         # inner points
         (-length / 2, -width / 2, thickness),
@@ -123,7 +159,7 @@ def add_tote(length: float = 1.0, width: float = 1.0, height: float = 0.5, thick
     mesh.update()
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.scene.collection.objects.link(obj)
-    make_smart_uv_project(obj.name)
+    _make_smart_uv_project(obj.name)
     if properties is not None:
         for key, value in properties.items():
             obj[key] = value
@@ -151,7 +187,14 @@ def _add_obj(filepath: str = None) -> bpy.types.Object:
     return obj
 
 
-def decimate_mesh(obj_name: str, max_faces: int = 10000):
+def decimate_mesh_object(obj_name: str, max_faces: int = 10000):
+    """Decimate the mesh object to target number of faces
+
+    :param obj_name: the name of object to be decimated
+    :type obj_name: str
+    :param max_faces: the number of faces of mesh object will be decimate to this value
+    :type max_faces: int
+    """
     obj = get_object_by_name(obj_name)
     bpy.context.view_layer.objects.active = obj
     bpy.ops.object.mode_set(mode='EDIT')
@@ -168,6 +211,28 @@ def decimate_mesh(obj_name: str, max_faces: int = 10000):
 
 def add_object_from_file(filepath: str = None, name: str = "Model", max_faces: int = None,
                          uv_project: bool = False, properties: dict = None) -> str:
+    """Add an object from model file
+
+    :param filepath: model file path, supported format: ply | stl | obj
+    :type filepath: str
+    :param name: object_name
+    :type name: str
+    :param max_faces: decimate the model if the number of faces larger than this value. if this value is None, do nothing
+    :type max_faces: int
+    :param uv_project: automatically generate the uv map of this object
+    :type uv_project: bool
+    :param properties: custom properties for physics simulation, useful properties:
+
+        - physics(bool) -- if true, the object will be moved in physics simulation, otherwise, only do collision check
+
+        - collision_shape(str) -- collision shape in physics simulation, options: "MESH" or "CONVEX_HULL"
+
+        - class_id(int) -- class id in ``render_class_segmap``
+
+    :type properties: dict
+    :return: object_name
+    :rtype: str
+    """
     ext = os.path.splitext(filepath)[-1]
     if ext == '.ply':
         obj = _add_ply(filepath)
@@ -186,22 +251,38 @@ def add_object_from_file(filepath: str = None, name: str = "Model", max_faces: i
             obj[key] = value
 
     if uv_project:
-        make_smart_uv_project(obj.name)
+        _make_smart_uv_project(obj.name)
 
     if max_faces is not None:
-        decimate_mesh(obj.name, max_faces)
+        decimate_mesh_object(obj.name, max_faces)
 
     return obj.name
 
 
 def duplicate_mesh_object(obj_name: str) -> str:
+    """Duplicate the mesh object by its name, use this function instead of loop to add new object to save memory
+
+    :param obj_name: the name of object to be duplicated
+    :type obj_name: str
+    :return: object_name of new object
+    :rtype: str
+    """
     obj = get_object_by_name(obj_name)
     bpy.context.view_layer.objects.active = obj
     bpy.ops.object.duplicate(linked=True)
     return bpy.context.active_object.name
 
 
-def export_mesh(filepath: str, obj_name: str, center_of_mass: bool = False):
+def export_mesh_object(filepath: str, obj_name: str, center_of_mass: bool = False):
+    """Export the mesh object to a specified filepath
+
+    :param filepath: output filepath, supported file format: ply | stl
+    :type filepath: str
+    :param obj_name: name of object to be exported
+    :type obj_name: str
+    :param center_of_mass: if true, reset the origin of object to its center of mass
+    :type center_of_mass: bool
+    """
     ext = os.path.splitext(filepath)[-1]
     if ext not in ['.ply', '.stl']:
         raise Exception('export_mesh only support ply and stl format')
@@ -225,6 +306,13 @@ def export_mesh(filepath: str, obj_name: str, center_of_mass: bool = False):
 
 
 def separate_isolated_meshes(obj_name: str) -> List[str]:
+    """Separate a mesh into multiple meshes if they have no linked parts
+
+    :param obj_name: name of object to be separated
+    :type obj_name: str
+    :return: list of separated object names
+    :rtype: List of str
+    """
     obj = get_object_by_name(obj_name)
     objects_before_separate = set([obj.name for obj in get_all_mesh_objects()])
     bpy.context.view_layer.objects.active = obj
@@ -238,7 +326,17 @@ def separate_isolated_meshes(obj_name: str) -> List[str]:
     return ret_names
 
 
-def write_meshes_info(filepath: str = '/tmp/temp.csv'):
+def export_meshes_info(filepath: str = '/tmp/temp.csv'):
+    """Export information of all objects in the scene to a csv file, an example of csv file:
+
+    instance_id(int), class_id(int), name(str), pose(flattened 3x4 matrix)
+
+    1, 1, Plane, 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0
+
+    ...
+
+    :param filepath: output filepath
+    """
     if os.path.splitext(filepath)[-1] not in ['.csv']:
         raise Exception('Unsupported file format: {}'.format(os.path.splitext(filepath)[-1]))
 
@@ -253,10 +351,47 @@ def write_meshes_info(filepath: str = '/tmp/temp.csv'):
             instance_id = i + 1
             class_id = obj.get('class_id', 0)
             name = obj.name
-            pose = ' '.join([str(obj.matrix_world[0][0]) for i in range(3) for j in range(4)])
+            pose = ' '.join([str(obj.matrix_world[i][j]) for i in range(3) for j in range(4)])
             f.write('{}, {}, {}, {}\n'.format(instance_id, class_id, name, pose))
 
 
-__all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_ball', 'add_tote', 'add_object_from_file', 'decimate_mesh',
-           'remove_mesh_object', 'duplicate_mesh_object', 'separate_isolated_meshes', 'write_meshes_info',
-           'export_mesh']
+def get_all_mesh_objects() -> List[bpy.types.Object]:
+    """Get all mesh objects in the scene
+
+    :return: list of blender objects
+    :rtype: List of bpy.types.Object
+    """
+    ret = []
+    for obj in bpy.data.objects:
+        if obj.type == 'MESH':
+            ret.append(obj)
+    return ret
+
+
+def get_mesh_objects_by_custom_properties(properties: dict = None) -> List[bpy.types.Object]:
+    """Get mesh objects have the specified custom properties
+
+    :param properties: object custom properties
+    :type properties: dict
+    :return: list of blender objects
+    :rtype: List of bpy.types.Object
+    """
+    if properties is None:
+        properties = []
+
+    all_objects_set = set(get_all_mesh_objects())
+    not_matched_objects_set = set()
+
+    for obj in get_all_mesh_objects():
+        for key, value in properties.items():
+            obj_value = obj.get(key, None)
+            if obj_value != value:
+                not_matched_objects_set.add(obj)
+
+    return list(all_objects_set - not_matched_objects_set)
+
+
+__all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_ball', 'add_tote', 'add_object_from_file',
+           'decimate_mesh_object', 'remove_mesh_object', 'remove_highest_mesh_object', 'duplicate_mesh_object',
+           'separate_isolated_meshes', 'export_meshes_info', 'export_mesh_object', 'get_all_mesh_objects',
+           'get_mesh_objects_by_custom_properties']

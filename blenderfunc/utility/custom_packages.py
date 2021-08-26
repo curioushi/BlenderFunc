@@ -6,7 +6,22 @@ from typing import List
 from .environment import get_python_bin, get_installed_packages, get_custom_python_packages_path
 
 
-def setup_custom_packages(required_packages: List = None, reinstall_packages: bool = False):
+def setup_custom_packages(required_packages: List[str] = None, reinstall_packages: bool = False):
+    """Setup custom python packages in the Blender's python directory. This function will check if a
+    package has been installed, if not, then use the pip tool embedded in Blender's python environment
+    to install the missing packages
+
+    :param required_packages: The python packages to be installed
+    :type required_packages: list of str
+    :param reinstall_packages: Force reinstall packages if true
+    :type reinstall_packages: bool, optional
+    """
+
+    # don't setup packages when building documentations
+    for val in sys.argv:
+        if "sphinx" in val:
+            return
+
     python_bin = get_python_bin()
     packages_path = get_custom_python_packages_path()
 

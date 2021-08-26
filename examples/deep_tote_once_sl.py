@@ -1,12 +1,7 @@
 import sys
-
 sys.path.append('.')
-from blenderfunc.utility.custom_packages import setup_custom_packages
-
-setup_custom_packages(["numpy", "Pillow", "xmltodict", "opencv-python"])
-
 import random
-import blenderfunc.all as bf
+import blenderfunc as bf
 from examples.utility import compute_structured_light_params
 from glob import glob
 
@@ -25,10 +20,10 @@ tote = bf.add_tote(length=0.7, width=0.9, height=0.7,
 obj = bf.add_object_from_file(filepath='resources/models/brake_disk.ply', uv_project=True,
                               properties=dict(physics=True, collision_shape='CONVEX_HULL', class_id=3))
 pose_sampler = bf.in_tote_sampler(tote, obj, num)
-bf.collision_avoidance_positioning(obj, pose_sampler)
+bf.collision_free_positioning(obj, pose_sampler)
 for _ in range(num - 1):
     obj = bf.duplicate_mesh_object(obj)
-    bf.collision_avoidance_positioning(obj, pose_sampler)
+    bf.collision_free_positioning(obj, pose_sampler)
 bf.physics_simulation()
 mat = bf.add_simple_material(color=[0, 0, 1], metallic=1, roughness=0.3)
 bf.set_material(obj, mat)
@@ -40,5 +35,5 @@ bf.render_light_mask('output/deep_tote_once_sl/light_mask.png', proj, save_blend
 bf.render_depth('output/deep_tote_once_sl/depth.png', save_blend_file=True)
 bf.render_instance_segmap('output/deep_tote_once_sl/instance.png', save_blend_file=True)
 bf.render_class_segmap('output/deep_tote_once_sl/class.png', save_blend_file=True)
-bf.render_normal_map('output/deep_tote_once_sl/normal.png', save_blend_file=True)
-bf.write_meshes_info('output/deep_tote_once_sl/info.csv')
+bf.render_normal('output/deep_tote_once_sl/normal.png', save_blend_file=True)
+bf.export_meshes_info('output/deep_tote_once_sl/info.csv')

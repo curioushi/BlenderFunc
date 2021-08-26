@@ -7,6 +7,12 @@ from blenderfunc.utility.utility import get_material_by_name, get_object_by_name
 
 
 def get_hdr_material_infos(hdr_root: str = 'resources/hdr') -> dict:
+    """Get the information of HDR materials, we use free textures from polyhaven.com
+
+    :param hdr_root: root directory of downloaded textures
+    :return: textures information
+    :rtype: dict, key=texture_name, value=texture_filepath
+    """
     if not os.path.exists(hdr_root):
         raise Exception('Please run python3 scripts/download_hdr.py first to download hdr textures')
     hdr_files = list(glob(hdr_root + '/*.hdr'))
@@ -17,6 +23,22 @@ def get_hdr_material_infos(hdr_root: str = 'resources/hdr') -> dict:
 def set_hdr_background(filepath: str,
                        rot_x: float = 0.0, rot_y: float = 0.0, rot_z: float = 0.0,
                        scale_x: float = 1.0, scale_y: float = 1.0, scale_z: float = 1.0):
+    """Set background light to specified HDR texture
+
+    :param filepath: hdr texture filepath
+    :param rot_x: texture mapping x-axis rotation in degree
+    :type rot_y: float
+    :param rot_y: texture mapping y-axis rotation in degree
+    :type rot_y: float
+    :param rot_z: texture mapping z-axis rotation in degree
+    :type rot_z: float
+    :param scale_x: texture mapping x-axis scale
+    :type scale_x: float
+    :param scale_y: texture mapping y-axis scale
+    :type scale_y: float
+    :param scale_z: texture mapping z-axis scale
+    :type scale_z: float
+    """
     for world in bpy.data.worlds:
         bpy.data.worlds.remove(world)
     bpy.ops.world.new()
@@ -54,6 +76,13 @@ def set_hdr_background(filepath: str,
 
 
 def get_pbr_material_infos(texture_root: str = 'resources/cctextures') -> dict:
+    """Get the information of PBR materials, we use free textures from cc0textures.com
+
+    :param texture_root: root directory of downloaded textures. each texture with a folder, in the folder
+        there are multiple texture images
+    :return: textures information
+    :rtype: dict, key=texture_name, value=texture_folder
+    """
     if not os.path.exists(texture_root):
         raise Exception('Please run python3 scripts/download_textures.py first to download textures')
     texture_folders = sorted(list(glob(texture_root + '/*')))
@@ -72,6 +101,12 @@ def get_pbr_material_infos(texture_root: str = 'resources/cctextures') -> dict:
 
 
 def load_image(path) -> bpy.types.Image:
+    """Load an image to Blender environment, the name of loaded image will be set to its basename
+
+    :param path: path to the image to be loaded
+    :return: blender image object
+    :rtype: bpy.types.Image
+    """
     loaded_img = bpy.data.images.get(os.path.basename(path), None)
     if loaded_img:
         return loaded_img
@@ -79,6 +114,13 @@ def load_image(path) -> bpy.types.Image:
 
 
 def set_material(obj_name: str, mat_name: str):
+    """Set the material to the object
+
+    :param obj_name: object name
+    :type obj_name: str
+    :param mat_name: material name
+    :type mat_name: str
+    """
     obj = get_object_by_name(obj_name)
     mat = get_material_by_name(mat_name)
     if obj.type != 'MESH':
@@ -89,6 +131,19 @@ def set_material(obj_name: str, mat_name: str):
 
 def add_simple_material(color: List[float] = None, metallic: float = 0.0, roughness: float = 0.5,
                         name: str = "Material") -> str:
+    """Add a simple uniform material
+
+    :param color: rgb value, black=[0,0,0], white=[1,1,1]
+    :type color: List
+    :param metallic: control the metallic of material, valid range: [0,1]
+    :type metallic: float
+    :param roughness: control the roughness of material, valid range: [0,1]
+    :type roughness: float
+    :param name: material_name
+    :type name: str
+    :return:  material_name
+    :rtype: str
+    """
     if color is None:
         color = (0.8, 0.8, 0.8, 1)
     elif len(color) == 3:
@@ -112,8 +167,27 @@ def add_simple_material(color: List[float] = None, metallic: float = 0.0, roughn
 
 
 def add_pbr_material(texture_folder: str, name: str = "Material",
-                     loc_x: float = 0.0, loc_y: float = 0.0, rot_x: float = 0.0, rot_y: float = 0.0,
+                     loc_x: float = 0.0, loc_y: float = 0.0, rot_z: float = 0.0,
                      scale_x: float = 1.0, scale_y: float = 1.0) -> str:
+    """Add a PBR texture from a texture folder
+
+    :param texture_folder: the texture folder contains multiple texture images
+    :type texture_folder: str
+    :param name: texture_name
+    :type name: str
+    :param loc_x: texture mapping x-axis offset
+    :type loc_x: float
+    :param loc_y: texture mapping y-axis offset
+    :type loc_y: float
+    :param rot_z: texture mapping z-axis rotation in degree
+    :type rot_z: float
+    :param scale_x: texture mapping x-axis scale
+    :type scale_x: float
+    :param scale_y: texture mapping y-axis scale
+    :type scale_y: float
+    :return: texture_name
+    :rtype: str
+    """
     texture_paths = list(glob(texture_folder + '/*.jpg'))
 
     mat = bpy.data.materials.new(name)
@@ -222,27 +296,12 @@ def add_pbr_material(texture_folder: str, name: str = "Material",
 
     n_mapping.inputs['Location'].default_value[0] = loc_x
     n_mapping.inputs['Location'].default_value[1] = loc_y
-    n_mapping.inputs['Rotation'].default_value[0] = rot_x / 180 * math.pi
-    n_mapping.inputs['Rotation'].default_value[1] = rot_y / 180 * math.pi
+    n_mapping.inputs['Rotation'].default_value[2] = rot_z / 180 * math.pi
     n_mapping.inputs['Scale'].default_value[0] = scale_x
     n_mapping.inputs['Scale'].default_value[1] = scale_y
 
     return mat.name
 
 
-def make_smart_uv_project(obj_name: str):
-    obj = get_object_by_name(obj_name)
-    if obj.type == 'MESH':
-        prev_active = bpy.context.view_layer.objects.active
-        bpy.context.view_layer.objects.active = obj
-        bpy.ops.object.editmode_toggle()  # entering edit mode
-        bpy.ops.mesh.select_all(action='SELECT')  # select all objects elements
-        bpy.ops.uv.smart_project()  # the actual unwrapping operation
-        bpy.ops.object.editmode_toggle()  # exiting edit mode
-        bpy.context.view_layer.objects.active = prev_active
-    else:
-        raise Exception("only MESH object can be smart uv project")
-
-
 __all__ = ['get_pbr_material_infos', 'add_pbr_material', 'add_simple_material', 'load_image', 'set_material',
-           'make_smart_uv_project', 'get_hdr_material_infos', 'set_hdr_background']
+           'get_hdr_material_infos', 'set_hdr_background']

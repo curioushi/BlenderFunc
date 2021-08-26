@@ -285,8 +285,22 @@ def set_projector(opencv_matrix: List[List[float]] = None,
                   distort_coeffs: List[float] = None,
                   image_path: str = None,
                   pose: List[List[float]] = None,
-                  energy: float = 100.0,
-                  max_bounces: int = 0) -> str:
+                  energy: float = 100.0) -> str:
+    """Set the projector in the Blender environment
+
+    :param opencv_matrix: 3x3 intrinsics matrix, [[fx, 0, cx], [0, fy, cy], [0, 0, 1]]
+    :type opencv_matrix: List of Lists
+    :param distort_coeffs: [k1, k2, p1, p2, k3]
+    :type distort_coeffs: List
+    :param image_path: path to the image to be projected
+    :type image_path: str
+    :param pose: 4x4 extrinsic matrix
+    :type pose: List of Lists
+    :param energy: projector energy
+    :type energy: float
+    :return: object_name
+    :rtype: str
+    """
     if opencv_matrix is None:
         opencv_matrix = [[512, 0, 256], [0, 512, 256], [0, 0, 1]]
     if distort_coeffs is None:
@@ -309,7 +323,7 @@ def set_projector(opencv_matrix: List[List[float]] = None,
 
     projector.data.name = 'Projector'
     projector.data.energy = energy
-    projector.data.cycles.max_bounces = max_bounces
+    projector.data.cycles.max_bounces = 1024
     projector.data.distance = 0
     projector.data.spot_size = 1.5
     projector.data.shadow_soft_size = 0

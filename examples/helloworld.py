@@ -1,9 +1,6 @@
 import sys
 sys.path.append('.')
-from blenderfunc.utility.custom_packages import setup_custom_packages
-setup_custom_packages(["numpy", "Pillow", "opencv-python", "imageio", "xmltodict", "pyyaml"])
-
-import blenderfunc.all as bf
+import blenderfunc as bf
 
 bf.initialize()
 bf.set_background_light(color=[0.5, 0.5, 0.5], strength=1)
