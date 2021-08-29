@@ -1,4 +1,6 @@
 .idea/
+blender-2.92.0-linux64/
+blender
 output/
 resources/cctextures/
 resources/hdr/
