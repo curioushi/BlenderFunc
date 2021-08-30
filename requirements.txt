@@ -1,0 +1,7 @@
+fake-bpy-module-2.92
+numpy
+Pillow
+opencv-python
+imageio
+pyyaml
+xmltodict
