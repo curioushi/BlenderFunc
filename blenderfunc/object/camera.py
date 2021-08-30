@@ -30,9 +30,9 @@ def set_camera(opencv_matrix: List[List[float]] = None,
     :rtype: str
     """
     if opencv_matrix is None:
-        opencv_matrix = [[400, 0, 400], [0, 400, 300], [0, 0, 1]]
+        opencv_matrix = [[512, 0, 256], [0, 512, 256], [0, 0, 1]]
     if image_resolution is None:
-        image_resolution = [800, 600]
+        image_resolution = [512, 512]
     if distort_coeffs is None:
         distort_coeffs = [0.0, 0.0, 0.0, 0.0, 0.0]  # k1, k2, p1, p2, k3
     if pose is None:

@@ -68,7 +68,7 @@ synthesize_xyz_log --output_dir=$(pwd)/xyz_log
 - [ ] pose sampler return same format
 - [x] xyz-log format
 - [ ] coco format
-- [ ] documentation
+- [x] documentation
 
 ### bugs
 - [x] physics simulation origin wrong

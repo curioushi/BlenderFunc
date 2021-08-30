@@ -24,6 +24,14 @@ Welcome to BlenderFunc's documentation!
    :caption: Examples
 
    examples/helloworld
+   examples/printenv
+   examples/physics_simulation
+   examples/distortion
+   examples/structured_light
+   examples/calibration
+   examples/pbr_texture
+   examples/hdr_texture
+   examples/renderers
 
 .. toctree::
    :maxdepth: 1
