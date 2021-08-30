@@ -83,3 +83,24 @@ to find BlenderFunc.
 
 The above line will first install the dependencies of BlenderFunc using the pip tool embedded in Blender, then 
 import all BlenderFunc APIs. You can check the ``blenderfunc/__init__.py`` for detail.
+
+.. code-block:: python
+
+    bf.initialize()
+    bf.add_light(location=[-5, 0, 10], energy=100)
+    bf.add_plane(10)
+    cube_name = bf.add_cube(1)
+    bf.get_object_by_name(cube_name).location = (0, 0, 0.5)
+    bf.set_camera(pose=[[1.0,  0.0,  0.0,  0.0],
+                        [0.0,  0.0,  1.0, -2.5],
+                        [0.0, -1.0,  0.0,  0.5],
+                        [0.0,  0.0,  0.0,  1.0]])
+
+Initialize the Blender scene, add a light source, add a plane, add a cube and set its location, set a camera.
+
+.. code-block:: python
+
+    bf.render_color('output/helloworld/output.png', save_blend_file=True)
+
+Render the scene and save the color image to ``output/helloworld/output.png``, it will also 
+save the ".blend" file for debugging purpose if ``save_blend_file=True``.

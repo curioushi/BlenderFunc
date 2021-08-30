@@ -1,4 +1,5 @@
 .idea/
+.vscode/
 blender-2.92.0-linux64/
 blender
 output/

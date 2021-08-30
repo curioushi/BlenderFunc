@@ -1,12 +1,12 @@
 import sys
 sys.path.append('.')
+import blenderfunc as bf
 import argparse
 import os
 import sys
 import json
 import yaml
 import numpy as np
-import blenderfunc as bf
 import time
 from typing import List
 
