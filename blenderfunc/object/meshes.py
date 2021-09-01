@@ -273,6 +273,26 @@ def duplicate_mesh_object(obj_name: str) -> str:
     return bpy.context.active_object.name
 
 
+def set_origin_to_center_of_mass(obj_name: str, mode: str = 'volume'):
+    """Set the origin of object to its center of mass
+
+    :param obj_name: the name of object
+    :type obj_name: str
+    :param mode: the type of center fo mass: volume | surface
+    :type mode: str
+    """
+    mode = mode.lower()
+    if mode not in ['volume', 'surface']:
+        raise Exception('Unknown center of mass mode: {}'.format(mode))
+
+    obj = get_object_by_name(obj_name)
+    bpy.context.view_layer.objects.active = obj
+    if mode == 'volume':
+        bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_VOLUME', center='MEDIAN')
+    elif mode == 'surface':
+        bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS', center='MEDIAN')
+
+
 def export_mesh_object(filepath: str, obj_name: str, center_of_mass: bool = False):
     """Export the mesh object to a specified filepath
 
@@ -292,8 +312,7 @@ def export_mesh_object(filepath: str, obj_name: str, center_of_mass: bool = Fals
             bpy.data.objects.remove(obj)
     obj = bpy.data.objects[0]
     if center_of_mass:
-        bpy.context.view_layer.objects.active = obj
-        bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_VOLUME', center='MEDIAN')
+        set_origin_to_center_of_mass(obj_name, mode='VOLUME')
     obj.location = (0, 0, 0)
     obj.rotation_euler = (0, 0, 0)
     if ext == '.ply':
@@ -394,4 +413,4 @@ def get_mesh_objects_by_custom_properties(properties: dict = None) -> List[bpy.t
 __all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_ball', 'add_tote', 'add_object_from_file',
            'decimate_mesh_object', 'remove_mesh_object', 'remove_highest_mesh_object', 'duplicate_mesh_object',
            'separate_isolated_meshes', 'export_meshes_info', 'export_mesh_object', 'get_all_mesh_objects',
-           'get_mesh_objects_by_custom_properties']
+           'get_mesh_objects_by_custom_properties', 'set_origin_to_center_of_mass']

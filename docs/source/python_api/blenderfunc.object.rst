@@ -30,6 +30,7 @@ Mesh
 .. autofunction:: export_meshes_info
 .. autofunction:: get_all_mesh_objects
 .. autofunction:: get_mesh_objects_by_custom_properties
+.. autofunction:: set_origin_to_center_of_mass
 
 Texture
 ------------------------
@@ -40,6 +41,7 @@ Texture
 .. autofunction:: set_material
 .. autofunction:: get_hdr_material_infos
 .. autofunction:: set_hdr_background
+.. autofunction:: add_transparent_material
 
 Physics
 ------------------------

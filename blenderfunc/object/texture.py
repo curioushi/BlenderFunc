@@ -303,5 +303,32 @@ def add_pbr_material(texture_folder: str, name: str = "Material",
     return mat.name
 
 
+def add_transparent_material(name: str = "Material", emission_strength: float = 1.0) -> str:
+    """Add a transparent material
+
+    :param name: material_name
+    :type name: str
+    :param emission_strength: control the emission strength of principled volume shader
+    :type emission_strength: float
+    :return:  material_name
+    :rtype: str
+    """
+    mat = bpy.data.materials.new(name)
+    mat.use_nodes = True
+    tree = mat.node_tree
+    nodes = tree.nodes
+    links = tree.links
+    for node in tree.nodes:
+        tree.nodes.remove(node)
+
+    n_volume = nodes.new('ShaderNodeVolumePrincipled')
+    n_output = nodes.new('ShaderNodeOutputMaterial')
+    links.new(n_volume.outputs[0], n_output.inputs[1])
+
+    n_volume.inputs[6].default_value = emission_strength
+
+    return mat.name
+
+
 __all__ = ['get_pbr_material_infos', 'add_pbr_material', 'add_simple_material', 'load_image', 'set_material',
-           'get_hdr_material_infos', 'set_hdr_background']
+           'get_hdr_material_infos', 'set_hdr_background', 'add_transparent_material']

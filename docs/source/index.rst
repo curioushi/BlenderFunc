@@ -32,6 +32,7 @@ Welcome to BlenderFunc's documentation!
    examples/pbr_texture
    examples/hdr_texture
    examples/renderers
+   examples/symmetry
 
 .. toctree::
    :maxdepth: 1
