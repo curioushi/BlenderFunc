@@ -1,5 +1,6 @@
 import os
 import bpy
+import shutil
 from glob import glob
 
 
@@ -59,14 +60,12 @@ def initialize_folder(directory: str, clear_files: bool = False):
 
     :param directory: The path to the directory will be initialized
     :type directory: str
-    :param clear_files: Remove all files except directories in the folders
+    :param clear_files: Remove all files and directories in the folders
     :type clear_files: bool, optional
     """
-    os.makedirs(directory, exist_ok=True)
     if clear_files:
-        for file in glob(directory + '/*'):
-            if not os.path.isdir(file):
-                os.remove(file)
+        shutil.rmtree(directory, ignore_errors=True)
+    os.makedirs(directory, exist_ok=True)
 
 
 def save_blend(filepath: str = '/tmp/temp.blend'):

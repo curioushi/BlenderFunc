@@ -1,10 +1,12 @@
 from typing import Union, Callable
 
 import bpy
+import bmesh
 import numpy as np
+import mathutils
 from mathutils import Vector, Euler
 
-from blenderfunc.object.meshes import get_all_mesh_objects
+from blenderfunc.object.meshes import get_all_mesh_objects, decimate_mesh_object
 from blenderfunc.utility.utility import seconds_to_frames, get_object_by_name
 
 
@@ -161,7 +163,7 @@ def _bake_physics_simulation(min_simulation_time: float, max_simulation_time: fl
 
 
 def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: float = 10.0,
-                       substeps_per_frame: int = 10):
+                       substeps_per_frame: int = 10, max_faces: int = 500):
     """Run physics simulation for a few seconds then freeze the scene. Simulation will stop automatically if the object
     is no longer moving or if the *max_simulation_time* has been reached
 
@@ -172,6 +174,8 @@ def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: fl
     :param substeps_per_frame: number of substeps to solve physics computation per frame, higher value for more stable
         simulation
     :type substeps_per_frame: int
+    :param max_faces: reduce the number of faces to speed up collision checking, only works in physics simulation
+    :type max_faces: int
     """
     # enable rigid body
     for obj in get_all_mesh_objects():
@@ -181,6 +185,12 @@ def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: fl
         _enable_rigid_body(obj, physics_type, physics_collision_shape, physics_collision_margin)
 
     bpy.ops.ed.undo_push(message='before simulation')
+    if max_faces is not None:
+        all_mesh_data = set()
+        for obj in get_all_mesh_objects():
+            if obj.data.name not in all_mesh_data:
+                all_mesh_data.add(obj.data.name)
+                decimate_mesh_object(obj.name, max_faces)
     obj_poses_before_sim = _get_active_objects_pose()
     origin_shifts = _simulation(min_simulation_time, max_simulation_time, substeps_per_frame=substeps_per_frame)
     obj_poses_after_sim = _get_active_objects_pose()
@@ -208,7 +218,7 @@ def physics_simulation(min_simulation_time: float = 1.0, max_simulation_time: fl
         _disable_rigid_body(obj)
 
 
-def _check_no_collision(obj: bpy.types.Object):
+def _check_no_collision(obj: bpy.types.Object, bvh_cache: dict = None):
     objects_to_check_against = get_all_mesh_objects()
 
     no_collision = True
@@ -217,13 +227,47 @@ def _check_no_collision(obj: bpy.types.Object):
             continue
         intersection = _check_bb_intersection(obj, collision_obj)
         if intersection:
+            intersection, bvh_cache = _check_mesh_intersection(obj, collision_obj, bvh_cache)
+        if intersection:
             no_collision = False
             break
-    return no_collision
+    return no_collision, bvh_cache
 
 
 def _get_bound_box(obj: bpy.types.Object):
     return [obj.matrix_world @ Vector(cord) for cord in obj.bound_box]
+
+
+def _create_bvh_tree(obj: bpy.types.Object) -> mathutils.bvhtree.BVHTree:
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bm.transform(obj.matrix_world)
+    bvh_tree = mathutils.bvhtree.BVHTree.FromBMesh(bm)
+    bm.free()
+    return bvh_tree
+
+
+def _check_mesh_intersection(obj1: bpy.types.Object, obj2: bpy.types.Object, bvh_cache: dict = None):
+    if bvh_cache is None:
+        bvh_cache = {}
+
+    if len(obj1.data.vertices) == 0 or len(obj2.data.vertices) == 0:
+        return False, bvh_cache
+
+    if obj1.name not in bvh_cache:
+        obj1_bvhtree = _create_bvh_tree(obj1)
+        bvh_cache[obj1.name] = obj1_bvhtree
+    else:
+        obj1_bvhtree = bvh_cache[obj1.name]
+
+    if obj2.name not in bvh_cache:
+        obj2_bvhtree = _create_bvh_tree(obj2)
+        bvh_cache[obj2.name] = obj2_bvhtree
+    else:
+        obj2_bvhtree = bvh_cache[obj2.name]
+
+    inter = len(obj1_bvhtree.overlap(obj2_bvhtree)) > 0
+    return inter, bvh_cache
 
 
 def _check_bb_intersection(obj1: bpy.types.Object, obj2: bpy.types.Object):
@@ -252,18 +296,24 @@ def collision_free_positioning(obj_name: str, pose_sampler: Callable, max_trials
     :type pose_sampler: function
     :param max_trials: max number of trials
     :type max_trials: int
+    :return: True if no collision
+    :rtype: bool
     """
+    bvh_cache = None
     obj = get_object_by_name(obj_name)
     for i in range(max_trials):
         pos, euler = pose_sampler()
         obj.location = pos
         obj.rotation_euler = euler
+        if bvh_cache and obj.name in bvh_cache:
+            del bvh_cache[obj.name]
         bpy.context.view_layer.update()
-        no_collision = _check_no_collision(obj)
+        no_collision, bvh_cache = _check_no_collision(obj, bvh_cache)
         if no_collision:
             print('Successfully positioning object in {} trials'.format(i + 1))
-            return
+            return True
     print('Failed to avoid collision when positioning')
+    return False
 
 
 __all__ = ['physics_simulation', 'collision_free_positioning']

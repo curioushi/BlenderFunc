@@ -1,6 +1,6 @@
 # install required packages before import
 from blenderfunc.utility.custom_packages import setup_custom_packages
-setup_custom_packages(["numpy", "Pillow", "opencv-python", "imageio", "pyyaml"])
+setup_custom_packages(["numpy", "Pillow", "opencv-python", "imageio", "pyyaml", "tqdm"])
 
 from blenderfunc.utility.utility import *
 from blenderfunc.utility.environment import *

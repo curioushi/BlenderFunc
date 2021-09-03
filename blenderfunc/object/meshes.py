@@ -1,6 +1,7 @@
 import os
 import bpy
 import bmesh
+import numpy as np
 from typing import List
 from blenderfunc.utility.utility import get_object_by_name
 
@@ -48,9 +49,41 @@ def remove_highest_mesh_object(mesh_objects: List[bpy.types.Object] = None):
     remove_mesh_object(mesh_objects[index].name)
 
 
-def add_plane(size: float = 1.0, name: str = 'Plane', properties: dict = None) -> str:
+def remove_mesh_objects_out_box(box: List[float], mesh_objects: List[bpy.types.Object] = None) -> int:
+    """Remove the mesh objects above a certain height
+
+    :param box: objects out of box will be removed, [xmin, xmax, ymin, ymax, zmin, zmax]
+    :type box: List of float
+    :param mesh_objects: the objects will be checker, if this value is None, all objects with
+        custom properties "physics = True" will be selected
+    :type mesh_objects: List of bpy.types.Object
+    :return: number of removed objects
+    :rtype: int
+    """
+    if mesh_objects is None:
+        mesh_objects = get_mesh_objects_by_custom_properties({"physics": True})
+
+    xmin, xmax, ymin, ymax, zmin, zmax = box
+    num = 0
+    for obj in mesh_objects:
+        pts = np.array([v.co for v in obj.data.vertices])
+        pts_ = np.hstack([pts, np.ones(len(pts))[:, np.newaxis]])
+        matrix_world = np.array(obj.matrix_world)
+        pts = pts_.dot(matrix_world.T)[:, :3]
+        pts_min = np.min(pts, axis=0)
+        pts_max = np.max(pts, axis=0)
+        if pts_min[0] < xmin or pts_min[1] < ymin or pts_min[2] < zmin or \
+                pts_max[0] > xmax or pts_max[1] > ymax or pts_max[2] > zmax:
+            remove_mesh_object(obj.name)
+            num += 1
+    return num
+
+
+def add_plane(size: float = 1.0, location: List[float] = None, name: str = 'Plane', properties: dict = None) -> str:
     """Add a plane to the scene"""
-    bpy.ops.mesh.primitive_plane_add(size=size)
+    if location is None:
+        location = [0, 0, 0]
+    bpy.ops.mesh.primitive_plane_add(size=size, location=location)
     obj = bpy.context.active_object
     obj.name = name
     obj.data.name = name
@@ -345,16 +378,17 @@ def separate_isolated_meshes(obj_name: str) -> List[str]:
     return ret_names
 
 
-def export_meshes_info(filepath: str = '/tmp/temp.csv'):
+def export_meshes_info(filepath: str = '/tmp/temp.csv', visible_ratio: List[float] = None):
     """Export information of all objects in the scene to a csv file, an example of csv file:
 
-    instance_id(int), class_id(int), name(str), pose(flattened 3x4 matrix)
+    instance_id(int), class_id(int), name(str), visible(float), pose(flattened 3x4 matrix)
 
-    1, 1, Plane, 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0
+    1, 1, Plane, 0.5, 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0
 
     ...
 
     :param filepath: output filepath
+    :param visible_ratio: visible ratio of objects
     """
     if os.path.splitext(filepath)[-1] not in ['.csv']:
         raise Exception('Unsupported file format: {}'.format(os.path.splitext(filepath)[-1]))
@@ -365,13 +399,14 @@ def export_meshes_info(filepath: str = '/tmp/temp.csv'):
 
     mesh_objects = get_all_mesh_objects()
     with open(filepath, 'w') as f:
-        f.write('instance_id, class_id, name, pose\n')
+        f.write('instance_id, class_id, name, visible_ratio, pose\n')
         for i, obj in enumerate(mesh_objects):
             instance_id = i + 1
             class_id = obj.get('class_id', 0)
             name = obj.name
+            vr = -1 if visible_ratio is None else visible_ratio[i]
             pose = ' '.join([str(obj.matrix_world[i][j]) for i in range(3) for j in range(4)])
-            f.write('{}, {}, {}, {}\n'.format(instance_id, class_id, name, pose))
+            f.write('{}, {}, {}, {}, {}\n'.format(instance_id, class_id, name, vr, pose))
 
 
 def get_all_mesh_objects() -> List[bpy.types.Object]:
@@ -411,6 +446,6 @@ def get_mesh_objects_by_custom_properties(properties: dict = None) -> List[bpy.t
 
 
 __all__ = ['add_plane', 'add_cube', 'add_cylinder', 'add_ball', 'add_tote', 'add_object_from_file',
-           'decimate_mesh_object', 'remove_mesh_object', 'remove_highest_mesh_object', 'duplicate_mesh_object',
-           'separate_isolated_meshes', 'export_meshes_info', 'export_mesh_object', 'get_all_mesh_objects',
-           'get_mesh_objects_by_custom_properties', 'set_origin_to_center_of_mass']
+           'decimate_mesh_object', 'remove_mesh_object', 'remove_highest_mesh_object', 'remove_mesh_objects_out_box',
+           'duplicate_mesh_object', 'separate_isolated_meshes', 'export_meshes_info', 'export_mesh_object',
+           'get_all_mesh_objects', 'get_mesh_objects_by_custom_properties', 'set_origin_to_center_of_mass']

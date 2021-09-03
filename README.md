@@ -66,7 +66,7 @@ synthesize_xyz_log --output_dir=$(pwd)/xyz_log
 - [x] ABC dataset process
 - [x] calibration pipeline
 - [x] support stl model
-- [ ] upgrade collision checking
+- [x] upgrade collision checking
 - [ ] pose sampler return same format
 - [x] xyz-log format
 - [ ] coco format

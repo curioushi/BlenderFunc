@@ -32,21 +32,17 @@ def in_tote_sampler(tote_name: str, obj_name: str, num: int) -> Callable:
     tote = get_object_by_name(tote_name)
     obj = get_object_by_name(obj_name)
     length, width, height = tote.dimensions
-    pts = []
-    for vertex in obj.data.vertices:
-        pts.append(vertex.co)
-    pts = np.array(pts)
-    center = np.mean(pts, axis=0)
-
-    max_dist = np.max(np.linalg.norm(pts - center, axis=-1))
-    x_min = - length / 2 + max_dist
+    obj_volume = obj.dimensions[0] * obj.dimensions[1] * obj.dimensions[2]
+    pts = np.array([vertex.co for vertex in obj.data.vertices])
+    max_dist = np.max(np.linalg.norm(pts, axis=-1))
+    x_min = -length / 2 + max_dist
     x_max = length / 2 - max_dist
     y_min = -width / 2 + max_dist
     y_max = width / 2 - max_dist
     if x_min > x_max or y_min > y_max:
         raise Exception('Tote is too small')
     z_min = height + max_dist
-    volume = 2 * num * ((2 * max_dist) ** 3)
+    volume = 10 * num * obj_volume
     z_max = z_min + volume / ((x_max - x_min) * (y_max - y_min))
 
     def sampler():
