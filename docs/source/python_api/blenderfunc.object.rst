@@ -23,7 +23,7 @@ Mesh
 .. autofunction:: add_tote
 .. autofunction:: decimate_mesh_object
 .. autofunction:: remove_mesh_object
-.. autofunction:: remove_highest_mesh_object
+.. autofunction:: remove_mesh_objects_out_box
 .. autofunction:: duplicate_mesh_object
 .. autofunction:: separate_isolated_meshes
 .. autofunction:: export_mesh_object

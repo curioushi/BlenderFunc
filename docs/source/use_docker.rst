@@ -81,69 +81,76 @@ Build Docker
 Run Docker
 --------------------------
 
-Currently, docker can only be used to generate data in xyz_log format.
-
 You can use docker like a CLI tool:
 
 
 .. code-block:: shell
 
     ./run --help
-    ./run --output_dir=$(pwd)/xyz_log
+    ./run --output_dir=$(pwd)/deep_tote
 
 .. code-block:: text
 
     usage: blender [-h] [--output_dir OUTPUT_DIR] [--camera_type CAMERA_TYPE]
-                [--camera_height CAMERA_HEIGHT] [--obstruction OBSTRUCTION]
-                [--tote_length TOTE_LENGTH] [--tote_width TOTE_WIDTH]
-                [--tote_height TOTE_HEIGHT] [--tote_thickness TOTE_THICKNESS]
-                [--model_path MODEL_PATH] [--max_faces MAX_FACES]
-                [--num_begin NUM_BEGIN] [--num_end NUM_END]
-                [--num_pick NUM_PICK] [--max_bounces MAX_BOUNCES]
-                [--samples SAMPLES] [--substeps_per_frame SUBSTEPS_PER_FRAME]
-                [--enable_perfect_depth] [--enable_instance_segmap]
-                [--enable_class_segmap] [--enable_mesh_info]
+                   [--camera_height CAMERA_HEIGHT] [--obstruction OBSTRUCTION]
+                   [--tote_length TOTE_LENGTH] [--tote_width TOTE_WIDTH]
+                   [--tote_height TOTE_HEIGHT] [--tote_thickness TOTE_THICKNESS]
+                   [--model_path MODEL_PATH]
+                   [--model_max_dimension MODEL_MAX_DIMENSION]
+                   [--max_faces MAX_FACES] [--num_regen NUM_REGEN]
+                   [--num_begin NUM_BEGIN] [--num_end NUM_END]
+                   [--num_pick NUM_PICK] [--max_bounces MAX_BOUNCES]
+                   [--samples SAMPLES] [--substeps_per_frame SUBSTEPS_PER_FRAME]
+                   [--enable_perfect_depth] [--enable_instance_segmap]
+                   [--enable_object_masks] [--enable_class_segmap]
+                   [--enable_mesh_info]
 
     optional arguments:
-    -h, --help            show this help message and exit
-    --output_dir OUTPUT_DIR
+      -h, --help            show this help message and exit
+      --output_dir OUTPUT_DIR
                             output directory, the folder will be automatically
                             created if not exist
-    --camera_type CAMERA_TYPE
+      --camera_type CAMERA_TYPE
                             different cameras have different fov and aspect ratio:
                             Photoneo-M | Photoneo-L | XYZ-SL(default)
-    --camera_height CAMERA_HEIGHT
+      --camera_height CAMERA_HEIGHT
                             camera height in meter, default: 2
-    --obstruction OBSTRUCTION
+      --obstruction OBSTRUCTION
                             control the number of obstructed points, reasonable
                             range 0~0.4, default: 0.2
-    --tote_length TOTE_LENGTH
+      --tote_length TOTE_LENGTH
                             tote x-axis dimension, default: 0.7
-    --tote_width TOTE_WIDTH
+      --tote_width TOTE_WIDTH
                             tote y-axis dimension, default: 0.7
-    --tote_height TOTE_HEIGHT
+      --tote_height TOTE_HEIGHT
                             tote z-axis dimension, default: 0.5
-    --tote_thickness TOTE_THICKNESS
-                            tote thickness, default: 0.03
-    --model_path MODEL_PATH
+      --tote_thickness TOTE_THICKNESS
+                            tote thickness, default: 0.01
+      --model_path MODEL_PATH
                             CAD model, supported format: ply, stl
-    --max_faces MAX_FACES
+      --model_max_dimension MODEL_MAX_DIMENSION
+                            rescale the model to this value, if this value <= 0,
+                            do nothing
+      --max_faces MAX_FACES
                             decimate mesh if the number of faces of mesh is bigger
                             than this value, default: 10000
-    --num_begin NUM_BEGIN
+      --num_regen NUM_REGEN
+                            run generation process for num_gen times, default: 2
+      --num_begin NUM_BEGIN
                             number of objects at the beginning, default: 30
-    --num_end NUM_END     number of objects in the end, default: 0
-    --num_pick NUM_PICK   number of objects picked each time, default: 5
-    --max_bounces MAX_BOUNCES
+      --num_end NUM_END     number of objects in the end, default: 0
+      --num_pick NUM_PICK   number of objects picked each time, default: 5
+      --max_bounces MAX_BOUNCES
                             render option: max bounces of light, default: 3
-    --samples SAMPLES     render option: samples for each pixel, default: 10
-    --substeps_per_frame SUBSTEPS_PER_FRAME
+      --samples SAMPLES     render option: samples for each pixel, default: 10
+      --substeps_per_frame SUBSTEPS_PER_FRAME
                             physics option: higher value for higher simulation
                             stability, default: 10
-    --enable_perfect_depth
+      --enable_perfect_depth
                             flag: render depth without obstruction
-    --enable_instance_segmap
+      --enable_instance_segmap
                             flag: render instance segmentation map
-    --enable_class_segmap
+      --enable_object_masks
+                            flag: render object masks
+      --enable_class_segmap
                             flag: render class segmentation map
-    --enable_mesh_info    flag: write mesh information including poses

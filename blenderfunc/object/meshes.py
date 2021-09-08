@@ -381,7 +381,7 @@ def separate_isolated_meshes(obj_name: str) -> List[str]:
 def export_meshes_info(filepath: str = '/tmp/temp.csv', visible_ratio: List[float] = None):
     """Export information of all objects in the scene to a csv file, an example of csv file:
 
-    instance_id(int), class_id(int), name(str), visible(float), pose(flattened 3x4 matrix)
+    instance_id(int), class_id(int), name(str), visible_ratio(float), pose(flattened 3x4 matrix)
 
     1, 1, Plane, 0.5, 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0
 

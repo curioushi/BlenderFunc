@@ -24,6 +24,10 @@ LightMask
 -----------------------------
 .. autofunction:: render_light_mask
 
+ObjectMasks
+-----------------------------
+.. autofunction:: render_object_masks
+
 Others
 -----------------------------
 .. autofunction:: apply_binary_mask

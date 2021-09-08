@@ -564,7 +564,7 @@ def render_class_segmap(filepath: str = '/tmp/temp.png', save_blend_file=False, 
 
 
 def render_object_masks(filepath: str = '/tmp/temp.png', save_blend_file=False, save_npz=True, downsample=1):
-    """Render the mask for each object using a randomized algorithm
+    """Render masks of all objects
 
     :param filepath: the output image path, only for visualization
     :param save_blend_file: save the “.blend” file if true

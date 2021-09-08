@@ -1,6 +1,6 @@
 #!/bin/bash
 # WARNING: please use absolute path in arguments !!!
-# example: run.sh --output_dir=/home/$USER/Downloads/xyz_log
+# example: run.sh --output_dir=/home/$USER/Downloads/deep_tote
 
 args=$@
 
@@ -9,5 +9,5 @@ docker run --gpus=all -it --rm --user `id -u $USER`:`id -u $USER` \
            -v /home/$USER:/home/$USER \
            blenderfunc:latest \
            /bin/bash -c "cp -r /var/tmp/OptixCache_root /var/tmp/OptixCache_$USER && \
-                         ./blender -b --python examples/xyz_log.py -- \
+                         ./blender -b --python examples/deep_tote.py -- \
                          $args"
