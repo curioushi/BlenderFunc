@@ -5,8 +5,8 @@ import sys
 blender_path = os.path.abspath(os.path.join(os.path.dirname(sys.executable), "..", "..", ".."))
 blender_version = os.path.basename(os.path.abspath(os.path.join(os.path.dirname(sys.executable), "..", "..")))
 python_bin_folder = os.path.join(blender_path, blender_version, "python", "bin")
-python_bin = os.path.join(python_bin_folder, "python3.7m")
-pre_python_packages_path = os.path.join(python_bin_folder, "..", "lib", "python3.7", "site-packages")
+python_bin = os.path.join(python_bin_folder, "python3.9")
+pre_python_packages_path = os.path.join(python_bin_folder, "..", "lib", "python3.9", "site-packages")
 custom_python_packages_path = os.path.abspath(os.path.join(blender_path, 'custom-python-packages'))
 
 

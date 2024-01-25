@@ -17,12 +17,10 @@ The differences between this project and BlenderProc:
 ```shell
 cd BlenderFunc
 
-## install Blender 2.92
-wget https://download.blender.org/release/Blender2.92/blender-2.92.0-linux64.tar.xz
-# or use Tsinghua source
-# wget https://mirrors.tuna.tsinghua.edu.cn/blender/blender-release/Blender2.92/blender-2.92.0-linux64.tar.xz
-tar xvf blender-2.92.0-linux64.tar.xz
-ln -s blender-2.92.0-linux64/blender .
+## install Blender 2.93
+wget https://mirrors.tuna.tsinghua.edu.cn/blender/blender-release/Blender2.93/blender-2.93.9-linux-x64.tar.xz
+tar xvf blender-2.93.9-linux-x64.tar.xz
+ln -s blender-2.93.9-linux-x64/blender .
 
 ## run helloworld.py
 ./blender --background --python examples/helloworld.py
