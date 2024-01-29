@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     paths = list(zip(boxes_json_paths, container_stl_paths))
 
-    with Pool(processes=4) as pool:
+    with Pool(processes=3) as pool:
         for _ in tqdm(pool.imap_unordered(process_task, paths), total=len(paths)):
             pass
 

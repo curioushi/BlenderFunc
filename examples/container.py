@@ -49,7 +49,7 @@ def generate(container_path, boxes_data_path, output_dir,
              min_fov=120, max_fov=140,
              min_front_dist=0.9, max_front_dist=1.2,
              gap_y=1.0,
-             min_height=1.0, max_height=1.3,
+             min_height=-0.2, max_height=0.2,
              min_yaw=-2, max_yaw=2,
              min_pitch=-7, max_pitch=7):
     bf.initialize_folder(output_dir, clear_files=True)
@@ -105,7 +105,7 @@ def generate(container_path, boxes_data_path, output_dir,
 
     tf_world_cam = np.array([[0.0,  0.0,  1.0,  bbox_min[0] - random_dist],
                             [-1.0, 0.0,  0.0,  random_y],
-                            [0.0,  -1.0, 0.0,  bbox_min[2] + random_height],
+                            [0.0,  -1.0, 0.0,  random_height],
                             [0.0,  0.0,  0.0,  1.0]])
     yaw_rot = np.array([[math.cos(random_yaw), -math.sin(random_yaw), 0],
                         [math.sin(random_yaw), math.cos(random_yaw), 0],
@@ -238,7 +238,8 @@ def generate(container_path, boxes_data_path, output_dir,
 
     bf.render_depth(join(output_dir, f'depth.png'), depth_scale=0.0001)
     bf.render_normal(join(output_dir, f'normal.png'))
-    bf.set_background_light([1,1,1], 5)
+    bf.set_background_light([1, 1, 1], 10)
+    bf.add_light(location=tf_world_cam[:3, 3], energy=40)
     bf.render_color(join(output_dir, f'color.png'), denoiser='OPTIX', samples=64)
 
     with open(join(output_dir, f'boxes.json'), 'w') as f:
